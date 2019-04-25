@@ -31,7 +31,7 @@ var pogo = {
 	x: Math.round(0.5*cw),
 	y: ch-50,
 	l: 21,
-	t: 0.5,
+	t: 0,
 
 	// Properties
 	l0: 24,
