@@ -14,10 +14,22 @@
  */
  
 function drawGood(canvas, evt, mask, GOOD, BORDER, brushRadius) {
-	// Set square around cursor to be GOOD
 	var mousePos = getMousePos(canvas, evt);
-	for (let x=mousePos.x-brushRadius; x<mousePos.x+brushRadius; x++) {
-		for (let y=mousePos.y-brushRadius; y<mousePos.y+brushRadius; y++) {
+	return labelGoodRegion(mask, mousePos.x, mousePos.y, brushRadius, GOOD, BORDER);
+}
+
+function getMousePos(canvas, evt) {
+    var rect = canvas.getBoundingClientRect();
+    return {
+      x: evt.clientX - rect.left,
+      y: evt.clientY - rect.top
+    };
+}
+
+function labelGoodRegion(mask, xc, yc, radius, GOOD, BORDER) {
+	// Set square around cursor to be GOOD
+	for (let x=xc-radius; x<xc+radius; x++) {
+		for (let y=yc-radius; y<yc+radius; y++) {
 			if (x>=0 && x<mask.length && y>=0 && y<mask[0].length) {
 				mask[x][y] = GOOD;
 			}
@@ -37,14 +49,6 @@ function drawGood(canvas, evt, mask, GOOD, BORDER, brushRadius) {
 			}
 		}
 	}
-	
-	return mask;
-}
 
-function getMousePos(canvas, evt) {
-    var rect = canvas.getBoundingClientRect();
-    return {
-      x: evt.clientX - rect.left,
-      y: evt.clientY - rect.top
-    };
+	return mask;
 }

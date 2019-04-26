@@ -36,9 +36,13 @@ var pogo = {
 	// Properties
 	l0: 24,
 	m: 1,
+	r: 8,
 	headColor: '#F45947',
 	stickColor: '#FDFAF0'
 };
+
+// Initialize Mask around Pogo
+mask = labelGoodRegion(mask, pogo.x, pogo.y, pogo.r + Math.round(1.5*pogo.l0), GOOD, BORDER);
 
 // Animate
 window.onload = function() {
