@@ -21,7 +21,6 @@ function drawPogo(ctx, pogo) {
 	segmentWidth = pogo.r;
 	spacer = Math.round(segmentHeight*pogo.l/pogo.l0);
 	ctx.fillStyle = pogo.stickColor;
-	console.log(pogo.stickColor)
 	for (let s=0; s<3; s++) {
 		// Transform CTX
 		ctx.translate(pogo.x, pogo.y);

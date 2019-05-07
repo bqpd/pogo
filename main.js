@@ -1,14 +1,14 @@
 // Constants
-BAD = 0;
-GOOD = 1;
-BORDER = 2;
+const BAD = 0;
+const GOOD = 1;
+const BORDER = 2;
 
 // User Input
-color = [];
+var color = [];
 color[BAD] = hex2rgb('#4C453F');
 color[GOOD] = hex2rgb('#B0A091');
 color[BORDER] = hex2rgb('#F6E6D7');
-brushRadius = 10;
+const brushRadius = 20;
 
 // Define Canvas
 var ctx = canvas.getContext('2d');
@@ -41,6 +41,9 @@ var pogo = {
 	stickColor: '#FDFAF0'
 };
 
+// Initialize goal at Pogo's starting position
+var goal = new Point(pogo.x, pogo.y);
+
 // Initialize Mask around Pogo
 mask = labelGoodRegion(mask, pogo.x, pogo.y, pogo.r + Math.round(1.3*pogo.l0), GOOD, BORDER);
 
@@ -54,9 +57,9 @@ window.onload = function() {
 // Updates the mask when the mouse is moved when the mouse button is down.
 function mouseMoveCallback(evt) {
 	mask = drawGood(canvas, evt, mask, GOOD, BORDER, brushRadius);
-	borderPixels = getBorderPixels(mask);
-	console.log(borderPixels.length);
-	console.log(borderPixels[0].x);
+	var borderPixels = getBorderPixels(mask);
+	goal = getMousePos(canvas, evt);
+	reachablePixels = getPixelsThatCanReach(borderPixels, goal);
 }
 canvas.addEventListener('mousedown', function(ev) {
 	canvas.addEventListener('mousemove', mouseMoveCallback);
