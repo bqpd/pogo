@@ -46,22 +46,31 @@ function drawPogo(ctx, pogo) {
   } else {
     minangleSpread = Math.atan(pogo.l0, pogo.r)/6
     if (Fx != 0 || Fy != 0) {
-      pogo.t = Math.atan2(Fx, -Fy) // the direction we want to push
+      if (pogo.t < -Math.PI)  pogo.t += 2*Math.PI
+      if (pogo.t > Math.PI)   pogo.t -= 2*Math.PI
+      delta_t = Math.atan2(Fx, -Fy) - pogo.t
+      if (delta_t < -Math.PI)  delta_t += 2*Math.PI
+      if (delta_t > Math.PI)   delta_t -= 2*Math.PI
+      delta_t = Math.max(Math.min(delta_t, 1), -1) // velocity limit
+      // NOTE: if velocity limit is imposed, system gains energy by rotating
+      //       spring through the ground :(
+      pogo.t += delta_t
       for (var i=0; i<maybecollision.length; i++) {
         border = maybecollision[i]
         ctx.beginPath();
         border.th = Math.atan2(-(pogo.x - border.x), -(pogo.y - border.y))
         ctx.strokeStyle = "gray"
+        delta = R - dist(pogo, border)
         if (Math.abs(border.th-pogo.t) < minangleSpread) {
-          pogo.l = Math.min(pogo.l, pogo.l0 - (R - dist(pogo, border)));
+          pogo.l = Math.min(pogo.l, pogo.l0 - delta);
           ctx.strokeStyle = "red"
         }
         ctx.moveTo(pogo.x, pogo.y);
         ctx.lineTo(border.x, border.y);
-        ctx.stroke();
+        // ctx.stroke();
       }
-    } else { // 1st-order return to upright
-      pogo.t -= 0.1*pogo.t
+    } else {
+      pogo.t -= 0.1*(pogo.t - Math.atan2(pogo.vx, pogo.vy))  // 1st-order counterclockwise return to upright
     }
 
     Fx = (pogo.l0-pogo.l)*pogo.k*Math.sin(Math.PI+pogo.t)
@@ -77,29 +86,39 @@ function drawPogo(ctx, pogo) {
   pogo.y += pogo.vy*DT
 
 	// Leg : spacer*4 + segmentHeight*3 = pogo.l
-  ctx.beginPath();
-  nsegments = 3
-	spacer = segmentHeight = pogo.l/(2*nsegments - 1);
-	segmentWidth = pogo.r*(0.5 + 0.5*(1 - pogo.l/pogo.l0));
-	ctx.fillStyle = pogo.stickColor;
-	for (let s=0; s<nsegments; s++) {
-		// Transform CTX
-		ctx.translate(pogo.x, pogo.y);
-		ctx.rotate(-pogo.t);
-		ctx.translate(-pogo.x, -pogo.y);
+  if (pogo.l > 0) {
+    ctx.beginPath();
+    nsegments = 3
+  	spacer = segmentHeight = pogo.l/(2*nsegments - 1);
+  	segmentWidth = pogo.r*(0.5 + 0.5*(1 - pogo.l/pogo.l0));
+  	ctx.fillStyle = pogo.stickColor;
+  	for (let s=0; s<nsegments; s++) {
+  		// Transform CTX
+  		ctx.translate(pogo.x, pogo.y);
+  		ctx.rotate(-pogo.t);
+  		ctx.translate(-pogo.x, -pogo.y);
 
-		// Draw segment of pogo stick
-		ctx.fillRect(pogo.x - segmentWidth/2,
-                 pogo.y + pogo.r + spacer*s + segmentHeight*s,
-                 segmentWidth, segmentHeight);
+  		// Draw segment of pogo stick
+      if (s < nsegments-1) {
+        ctx.fillRect(pogo.x - segmentWidth/2,
+                     pogo.y + pogo.r + spacer*s + segmentHeight*s,
+                     segmentWidth, segmentHeight);
+      } else {
+        ctx.ellipse(pogo.x,
+                    pogo.y + pogo.r + spacer*(s+1) + segmentHeight*s - pogo.r_wheel/2,
+                    pogo.r_wheel, pogo.r_wheel, 0, 0, 2*Math.PI);
+        ctx.fill()
+      }
 
-		// Undo Transform
-		ctx.translate(pogo.x, pogo.y);
-		ctx.rotate(pogo.t);
-		ctx.translate(-pogo.x, -pogo.y);
-	}
+  		// Undo Transform
+  		ctx.translate(pogo.x, pogo.y);
+  		ctx.rotate(pogo.t);
+  		ctx.translate(-pogo.x, -pogo.y);
+  	}
+  }
 
 	// Head
+  ctx.beginPath();
 	ctx.fillStyle = pogo.headColor;
 
   squish = 0.3
