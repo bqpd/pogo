@@ -37,8 +37,8 @@ for (let r=0; r<mask.length; r++) {
 var pogo = {
 	// States
 	x: 0.5*cw,
-	y: ch-50,
-	l: 21,
+	y: 50,
+	l: 0,
 	t: 0,
 	vx: 10,
 	vy: 0,
@@ -47,8 +47,9 @@ var pogo = {
 	lasthitpixels: [],
 
 	// Properties
-	l0: 24,
+	l0: 20,
 	m: 1,
+	k: 2,
 	r: 8,
 	headColor: '#F45947',
 	stickColor: '#FDFAF0'
