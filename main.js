@@ -49,7 +49,7 @@ var pogo = {
 	// Properties
 	l0: 20,
 	m: 1,
-	k: 2,
+	k: 50,
 	r: 8,
 	headColor: '#F45947',
 	stickColor: '#FDFAF0'

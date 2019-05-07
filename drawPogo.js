@@ -14,27 +14,34 @@ function drawPogo(ctx, pogo) {
   var Fx = 0,
       Fy = 0,
       maxdelta = 0,
-      R = pogo.r + pogo.l0 + Math.round(pogo.r/2)/2;
+      R = pogo.r + pogo.l0 + Math.round(pogo.r/2)/2,
+      maybecollision = [];
   for (var i=0; i<borderPixels.length; i++) {
     border = borderPixels[i]
-    delta = R - dist(pogo, border);
+    d = dist(pogo, border)
+    delta = R - d;
     if (delta > 0) {
-      thwall = Math.atan2(pogo.x - border.x, -(pogo.y - border.y))  // to make down 0 angle
-      Fx += delta*pogo.k*Math.sin(Math.PI+thwall)
-      Fy += delta*pogo.k*Math.cos(Math.PI+thwall)
-      pogo.l = Math.min(pogo.l, pogo.l0-delta)
+      maybecollision.push(border)
+      Fx += delta*pogo.k*-(pogo.x-border.x)/d
+      Fy += delta*pogo.k*(pogo.y-border.y)/d
     }
   }
 
   if (Fx != 0 || Fy != 0) {
     pogo.t = Math.atan2(Fx, -Fy)
-
+    for (var i=0; i<maybecollision.length; i++) {
+      border = maybecollision[i]
+      thwall = Math.atan2(pogo.x - border.x, -(pogo.y - border.y))  // to make down 0 angle
+      if (Math.abs(thwall-pogo.t) < Math.atan(pogo.l0, pogo.r)/2) {
+        pogo.l = Math.min(pogo.l, pogo.l0 - R + dist(pogo, border));
+      }
+    }
   } else {
     pogo.t -= 0.1*pogo.t
   }
 
-  pogo.ax = -Fx/pogo.m
-  pogo.ay = Fy/pogo.m - -98.1
+  pogo.ax = -(pogo.l0-pogo.l)*pogo.k*Math.sin(pogo.t)/pogo.m
+  pogo.ay = -(pogo.l0-pogo.l)*pogo.k*Math.cos(pogo.t)/pogo.m + 98.1
   pogo.vx += pogo.ax*DT
   pogo.vy += pogo.ay*DT
   v = norm(pogo.vx, pogo.vy)
