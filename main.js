@@ -2,6 +2,14 @@
 BAD = 0;
 GOOD = 1;
 BORDER = 2;
+FPS = 60;
+DT = 1/FPS;
+run = true
+
+sqrt = Math.sqrt
+pow = Math.pow
+norm = (a, b) => sqrt(pow(a, 2) + pow(b, 2))
+dist = (a, b) => sqrt(pow(a.x-b.x, 2) + pow(a.y-b.y, 2))
 
 // User Input
 color = [];
@@ -28,10 +36,15 @@ for (let r=0; r<mask.length; r++) {
 // Initialize Pogo
 var pogo = {
 	// States
-	x: Math.round(0.5*cw),
+	x: 0.5*cw,
 	y: ch-50,
 	l: 21,
 	t: 0,
+	vx: 10,
+	vy: 0,
+	ax: 0,
+	ay: 0,
+	lasthitpixels: [],
 
 	// Properties
 	l0: 24,
@@ -43,6 +56,7 @@ var pogo = {
 
 // Initialize Mask around Pogo
 mask = labelGoodRegion(mask, pogo.x, pogo.y, pogo.r + Math.round(1.3*pogo.l0), GOOD, BORDER);
+borderPixels = getBorderPixels(mask);
 
 // Animate
 window.onload = function() {
