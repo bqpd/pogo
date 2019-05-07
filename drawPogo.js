@@ -8,13 +8,17 @@
  */
 
 function drawPogo(ctx, pogo) {
+  ctx.beginPath();
+
   // pogo dynamics
   pogo.l = pogo.l0
   // the central ball gets teleported out of walls with preserved energy (should never happen)
   var Fx = 0,
       Fy = 0,
+      Fx_inner = 0,
+      Fy_inner = 0,
       maxdelta = 0,
-      R = pogo.r + pogo.l0 + Math.round(pogo.r/2)/2,
+      R = pogo.r + pogo.l0,
       maybecollision = [];
   for (var i=0; i<borderPixels.length; i++) {
     border = borderPixels[i]
@@ -22,26 +26,50 @@ function drawPogo(ctx, pogo) {
     delta = R - d;
     if (delta > 0) {
       maybecollision.push(border)
-      Fx += delta*pogo.k*-(pogo.x-border.x)/d
-      Fy += delta*pogo.k*(pogo.y-border.y)/d
-    }
-  }
-
-  if (Fx != 0 || Fy != 0) {
-    pogo.t = Math.atan2(Fx, -Fy)
-    for (var i=0; i<maybecollision.length; i++) {
-      border = maybecollision[i]
       thwall = Math.atan2(pogo.x - border.x, -(pogo.y - border.y))  // to make down 0 angle
-      if (Math.abs(thwall-pogo.t) < Math.atan(pogo.l0, pogo.r)/2) {
-        pogo.l = Math.min(pogo.l, pogo.l0 - R + dist(pogo, border));
+      border.th = thwall
+      Fx += delta*pogo.k*Math.sin(Math.PI+thwall)
+      Fy += delta*pogo.k*Math.cos(Math.PI+thwall)
+      if (delta > pogo.l0) {
+        Fx_inner += (delta-pogo.l0)*pogo.k_head*Math.sin(Math.PI+thwall)
+        Fy_inner += (delta-pogo.l0)*pogo.k_head*Math.cos(Math.PI+thwall)
       }
     }
-  } else {
-    pogo.t -= 0.1*pogo.t
   }
 
-  pogo.ax = -(pogo.l0-pogo.l)*pogo.k*Math.sin(pogo.t)/pogo.m
-  pogo.ay = -(pogo.l0-pogo.l)*pogo.k*Math.cos(pogo.t)/pogo.m + 98.1
+  if (Fx_inner != 0 || Fy_inner != 0) {
+    pogo.l = 0
+    Fx = Fx_inner
+    Fy = Fy_inner
+    pogo.t = Math.atan2(Fx, -Fy)
+    Fx = -Fx_inner
+  } else {
+    minangleSpread = Math.atan(pogo.l0, pogo.r)/6
+    if (Fx != 0 || Fy != 0) {
+      pogo.t = Math.atan2(Fx, -Fy) // the direction we want to push
+      for (var i=0; i<maybecollision.length; i++) {
+        border = maybecollision[i]
+        ctx.beginPath();
+        border.th = Math.atan2(-(pogo.x - border.x), -(pogo.y - border.y))
+        ctx.strokeStyle = "gray"
+        if (Math.abs(border.th-pogo.t) < minangleSpread) {
+          pogo.l = Math.min(pogo.l, pogo.l0 - (R - dist(pogo, border)));
+          ctx.strokeStyle = "red"
+        }
+        ctx.moveTo(pogo.x, pogo.y);
+        ctx.lineTo(border.x, border.y);
+        ctx.stroke();
+      }
+    } else { // 1st-order return to upright
+      pogo.t -= 0.1*pogo.t
+    }
+
+    Fx = (pogo.l0-pogo.l)*pogo.k*Math.sin(Math.PI+pogo.t)
+    Fy = (pogo.l0-pogo.l)*pogo.k*Math.cos(Math.PI+pogo.t)
+  }
+
+  pogo.ax = Fx/pogo.m
+  pogo.ay = Fy/pogo.m + 98.1
   pogo.vx += pogo.ax*DT
   pogo.vy += pogo.ay*DT
   v = norm(pogo.vx, pogo.vy)
@@ -51,7 +79,7 @@ function drawPogo(ctx, pogo) {
 	// Leg : spacer*4 + segmentHeight*3 = pogo.l
   ctx.beginPath();
   nsegments = 3
-	spacer = segmentHeight = pogo.l/(2*nsegments - 1.48);
+	spacer = segmentHeight = pogo.l/(2*nsegments - 1);
 	segmentWidth = pogo.r*(0.5 + 0.5*(1 - pogo.l/pogo.l0));
 	ctx.fillStyle = pogo.stickColor;
 	for (let s=0; s<nsegments; s++) {

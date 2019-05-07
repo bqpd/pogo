@@ -50,6 +50,7 @@ var pogo = {
 	l0: 20,
 	m: 1,
 	k: 50,
+	k_head: 200,
 	r: 8,
 	headColor: '#F45947',
 	stickColor: '#FDFAF0'
