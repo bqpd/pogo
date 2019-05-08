@@ -12,7 +12,7 @@
  * @param {number}		brushRadius 	The radius of the brush with which the user paints the mask.
  * @returns {Number[][]}	The updated mask.
  */
- 
+
 function drawGood(canvas, evt, mask, GOOD, BORDER, brushRadius) {
 	var mousePos = getMousePos(canvas, evt);
 	return labelGoodRegion(mask, mousePos.x, mousePos.y, brushRadius, GOOD, BORDER);
@@ -31,7 +31,9 @@ function labelGoodRegion(mask, xc, yc, radius, GOOD, BORDER) {
 	for (let x=xc-radius; x<xc+radius; x++) {
 		for (let y=yc-radius; y<yc+radius; y++) {
 			if (x>=0 && x<mask.length && y>=0 && y<mask[0].length) {
-				mask[x][y] = GOOD;
+        if (pow(x-xc,2) + pow(y-yc,2) < pow(radius,2)) {
+            mask[x][y] = GOOD;
+        }
 			}
 		}
 	}
@@ -41,7 +43,7 @@ function labelGoodRegion(mask, xc, yc, radius, GOOD, BORDER) {
 		for (let y=0; y<mask[0].length; y++) {
 			if (mask[x][y]==GOOD) {
 				if (x==0 || x==mask.length-1 || y==0 || y==mask[0].length-1
-					|| mask[x-1][y-1]==BAD || mask[x-1][y]==BAD || mask[x-1][y+1]==BAD 
+					|| mask[x-1][y-1]==BAD || mask[x-1][y]==BAD || mask[x-1][y+1]==BAD
 					|| mask[x][y-1]==BAD || mask[x][y+1]==BAD
 					|| mask[x+1][y+1]==BAD || mask[x+1][y]==BAD || mask[x+1][y+1]==BAD) {
 					 mask[x][y] = BORDER;

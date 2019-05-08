@@ -2,13 +2,22 @@
 const BAD = 0;
 const GOOD = 1;
 const BORDER = 2;
+const FPS = 60;
+const DT = 1/FPS;
+run = true // set to false to halt animation
+
+// Convenient Functions
+sqrt = Math.sqrt
+pow = Math.pow
+norm = (a, b) => sqrt(pow(a, 2) + pow(b, 2))
+dist = (a, b) => sqrt(pow(a.x-b.x, 2) + pow(a.y-b.y, 2))
 
 // User Input
 var color = [];
 color[BAD] = hex2rgb('#4C453F');
 color[GOOD] = hex2rgb('#B0A091');
 color[BORDER] = hex2rgb('#F6E6D7');
-const brushRadius = 20;
+brushRadius = 40;
 
 // Define Canvas
 var ctx = canvas.getContext('2d');
@@ -28,15 +37,24 @@ for (let r=0; r<mask.length; r++) {
 // Initialize Pogo
 var pogo = {
 	// States
-	x: Math.round(0.5*cw),
-	y: ch-50,
-	l: 21,
+	x: 0.5*cw,
+	y: 50,
+	l: 0,
 	t: 0,
+	tv: 10,
+	vx: 10,
+	vy: 0,
+	ax: 0,
+	ay: 0,
+	lasthitpixels: [],
 
 	// Properties
-	l0: 24,
+	l0: 20,
 	m: 1,
+	k: 200,
+	k_head: 500,
 	r: 8,
+	r_wheel: 3,
 	headColor: '#F45947',
 	stickColor: '#FDFAF0'
 };
@@ -45,7 +63,8 @@ var pogo = {
 var goal = new Point(pogo.x, pogo.y);
 
 // Initialize Mask around Pogo
-mask = labelGoodRegion(mask, pogo.x, pogo.y, pogo.r + Math.round(1.3*pogo.l0), GOOD, BORDER);
+mask = labelGoodRegion(mask, pogo.x, pogo.y, brushRadius, GOOD, BORDER);
+borderPixels = getBorderPixels(mask);
 
 // Animate
 window.onload = function() {
@@ -57,9 +76,9 @@ window.onload = function() {
 // Updates the mask when the mouse is moved when the mouse button is down.
 function mouseMoveCallback(evt) {
 	mask = drawGood(canvas, evt, mask, GOOD, BORDER, brushRadius);
-	var borderPixels = getBorderPixels(mask);
+	borderPixels = getBorderPixels(mask);
 	goal = getMousePos(canvas, evt);
-	reachablePixels = getPixelsThatCanReach(borderPixels, goal);
+	// reachablePixels = getPixelsThatCanReach(borderPixels, goal);
 }
 canvas.addEventListener('mousedown', function(ev) {
 	canvas.addEventListener('mousemove', mouseMoveCallback);

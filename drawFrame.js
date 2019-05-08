@@ -14,7 +14,9 @@ function drawFrame(ctx, mask, color, pogo) {
 	//pogo = updatePogo(pogo,mask);
 	drawPogo(ctx, pogo);
 
-	window.requestAnimationFrame(function(ts) {
-		drawFrame(ctx, mask, color, pogo);
-	});
+	if (run) {
+		window.requestAnimationFrame(function(ts) {
+			drawFrame(ctx, mask, color, pogo);
+		});
+	}
 }
