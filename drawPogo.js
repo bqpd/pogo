@@ -67,7 +67,7 @@ function drawPogo(ctx, pogo) {
       ctx.moveTo(pogo.x, pogo.y);
       ctx.lineTo(border.x, border.y);
       // DEBUG: show possible collisions (gray) and actual collisions (red)
-      ctx.stroke();
+      // ctx.stroke(); // uncomment to show collisions
     }
   }
 
@@ -118,7 +118,7 @@ function drawPogo(ctx, pogo) {
                      segmentWidth, segmentHeight);
       } else {
         ctx.ellipse(pogo.x,
-                    pogo.y + pogo.r + spacer*(s+1) + segmentHeight*s - pogo.r_wheel/2,
+                    pogo.y + pogo.r + spacer*(s+1) + segmentHeight*s - pogo.r_wheel/2 - 1,
                     pogo.r_wheel, pogo.r_wheel, 0, 0, 2*Math.PI);
         ctx.fill()
       }
