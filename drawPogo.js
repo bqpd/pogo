@@ -49,9 +49,10 @@ function drawPogo(ctx, pogo) {
   }
 
   // COLLISION PHYSICS //
+  oldl = pogo.l
   pogo.l = pogo.l0  // reset length
   // NOTE: the leg instantaneously adopts the correct length, creating energy
-  collisionAngleSpread = Math.atan(pogo.l0, pogo.r)/6
+  collisionAngleSpread = Math.atan(pogo.l, pogo.r)/12
   if (Fx != 0 || Fy != 0) {
     for (var i=0; i<maybecollision.length; i++) {
       border = maybecollision[i]
@@ -74,12 +75,13 @@ function drawPogo(ctx, pogo) {
   Fx = (pogo.l0-pogo.l)*pogo.k*Math.sin(Math.PI+pogo.t)
   Fy = (pogo.l0-pogo.l)*pogo.k*Math.cos(Math.PI+pogo.t)
 
+  // spring damping (puts a ceiling on energy-pumping)
+  Fx += pow(oldl-pogo.l, 3)/DT*pogo.c*Math.sin(Math.PI+pogo.t)
+  Fy += pow(oldl-pogo.l, 3)/DT*pogo.c*Math.cos(Math.PI+pogo.t)
+
   // inner circle collision
-  if (Fx_inner != 0 || Fy_inner != 0) {
-    pogo.l = 0 // hide leg
-    Fx += -Fx_inner  // HACK: sign error somewhere
-    Fy += Fy_inner
-  }
+  Fx += -Fx_inner  // HACK: sign error somewhere
+  Fy += Fy_inner
 
   // INTEGRATION //
   pogo.ax = Fx/pogo.m
@@ -88,6 +90,12 @@ function drawPogo(ctx, pogo) {
   pogo.vy += pogo.ay*DT
   pogo.x += pogo.vx*DT
   pogo.y += pogo.vy*DT
+
+  if (pogo.x < 0 || pogo.x > canvas.width || pogo.y < 0 || pogo.y > canvas.height) {
+    pogo.vx = pogo.vy = 0;
+    pogo.x = pogo.restart_x
+    pogo.y = pogo.restart_y
+  }
 
   // DRAW POGO //
   // Leg

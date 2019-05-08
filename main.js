@@ -51,13 +51,16 @@ var pogo = {
 	// Properties
 	l0: 20,
 	m: 1,
-	k: 200,
+	k: 300,
+	c: 0.01,
 	k_head: 500,
 	r: 8,
 	r_wheel: 3,
 	headColor: '#F45947',
 	stickColor: '#FDFAF0'
 };
+pogo.restart_x = pogo.x;
+pogo.restart_y = pogo.y;
 
 // Initialize goal at Pogo's starting position
 var goal = new Point(pogo.x, pogo.y);
