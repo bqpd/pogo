@@ -50,7 +50,7 @@ var pogo = {
 	// Properties
 	l0: 20,
 	m: 1,
-	k: 100,
+	k: 200,
 	k_head: 500,
 	r: 8,
 	r_wheel: 3,

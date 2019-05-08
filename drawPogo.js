@@ -37,24 +37,27 @@ function drawPogo(ctx, pogo) {
     }
   }
 
-  if (Fx_inner != 0 || Fy_inner != 0) {
+  // CONTROLLER
+  if (pogo.t < -Math.PI)  pogo.t += 2*Math.PI
+  if (pogo.t > Math.PI)   pogo.t -= 2*Math.PI
+  delta_t = Math.atan2(Fx, -Fy) - pogo.t
+  if (delta_t < -Math.PI)  delta_t += 2*Math.PI
+  if (delta_t > Math.PI)   delta_t -= 2*Math.PI
+  // delta_t = Math.max(Math.min(delta_t, 1), -1) // velocity limit
+  // NOTE: if velocity limit is imposed, system gains energy by rotating
+  //       spring through the ground :(
+  pogo.t += delta_t
+  // END CONTROLLER
+
+  if (Fx_inner != 0 || Fy_inner != 0) { // bouncy inner circle
     pogo.l = 0
     Fx = Fx_inner
     Fy = Fy_inner
     pogo.t = Math.atan2(Fx, -Fy)
-    Fx = -Fx_inner
+    Fx = -Fx_inner  // HACK: sign error somewhere
   } else {
     minangleSpread = Math.atan(pogo.l0, pogo.r)/6
     if (Fx != 0 || Fy != 0) {
-      if (pogo.t < -Math.PI)  pogo.t += 2*Math.PI
-      if (pogo.t > Math.PI)   pogo.t -= 2*Math.PI
-      delta_t = Math.atan2(Fx, -Fy) - pogo.t
-      if (delta_t < -Math.PI)  delta_t += 2*Math.PI
-      if (delta_t > Math.PI)   delta_t -= 2*Math.PI
-      delta_t = Math.max(Math.min(delta_t, 1), -1) // velocity limit
-      // NOTE: if velocity limit is imposed, system gains energy by rotating
-      //       spring through the ground :(
-      pogo.t += delta_t
       for (var i=0; i<maybecollision.length; i++) {
         border = maybecollision[i]
         ctx.beginPath();
@@ -81,7 +84,6 @@ function drawPogo(ctx, pogo) {
   pogo.ay = Fy/pogo.m + 98.1
   pogo.vx += pogo.ax*DT
   pogo.vy += pogo.ay*DT
-  v = norm(pogo.vx, pogo.vy)
   pogo.x += pogo.vx*DT
   pogo.y += pogo.vy*DT
 
