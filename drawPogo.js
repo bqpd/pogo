@@ -3,8 +3,8 @@
  *
  * Draws the head and stick of the Pogo character in the correct position and orientation on the canvas.
  *
- * @param {object}		ctx		The context of the canvas on which to draw.
- * @param {object}		pogo 	The Pogo character object.
+ * @param {object}    ctx    The context of the canvas on which to draw.
+ * @param {object}    pogo   The Pogo character object.
  */
 
 function drawPogo(ctx, pogo) {
@@ -90,20 +90,20 @@ function drawPogo(ctx, pogo) {
   pogo.y += pogo.vy*DT
 
   // DRAW POGO //
-	// Leg
+  // Leg
   if (pogo.l > 0) {
     ctx.beginPath();
     nsegments = 3
-  	spacer = segmentHeight = pogo.l/(2*nsegments - 1);
-  	segmentWidth = pogo.r*(0.5 + 0.5*(1 - pogo.l/pogo.l0));
-  	ctx.fillStyle = pogo.stickColor;
-  	for (let s=0; s<nsegments; s++) {
-  		// Transform CTX
-  		ctx.translate(pogo.x, pogo.y);
-  		ctx.rotate(-pogo.t);
-  		ctx.translate(-pogo.x, -pogo.y);
+    spacer = segmentHeight = pogo.l/(2*nsegments - 1);
+    segmentWidth = pogo.r*(0.5 + 0.5*(1 - pogo.l/pogo.l0));
+    ctx.fillStyle = pogo.stickColor;
+    for (let s=0; s<nsegments; s++) {
+      // Transform CTX
+      ctx.translate(pogo.x, pogo.y);
+      ctx.rotate(-pogo.t);
+      ctx.translate(-pogo.x, -pogo.y);
 
-  		// Draw segment of pogo stick
+      // Draw segment of pogo stick
       if (s < nsegments-1) {
         ctx.fillRect(pogo.x - segmentWidth/2,
                      pogo.y + pogo.r + spacer*s + segmentHeight*s,
@@ -119,12 +119,12 @@ function drawPogo(ctx, pogo) {
       ctx.translate(pogo.x, pogo.y);
       ctx.rotate(pogo.t);
       ctx.translate(-pogo.x, -pogo.y);
-  	}
+    }
   }
 
-	// Head
+  // Head
   ctx.beginPath();
-	ctx.fillStyle = pogo.headColor;
+  ctx.fillStyle = pogo.headColor;
 
   squish = 0.3
   ctx.ellipse(pogo.x,
@@ -133,5 +133,5 @@ function drawPogo(ctx, pogo) {
               pogo.r*(1 - squish + squish*pogo.l/pogo.l0),
               -pogo.t,
               0, 2*Math.PI);
-	ctx.fill();
+  ctx.fill();
 }
