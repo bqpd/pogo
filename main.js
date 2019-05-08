@@ -2,10 +2,11 @@
 const BAD = 0;
 const GOOD = 1;
 const BORDER = 2;
-FPS = 60;
-DT = 1/FPS;
-run = true
+const FPS = 60;
+const DT = 1/FPS;
+run = true // set to false to halt animation
 
+// Convenient Functions
 sqrt = Math.sqrt
 pow = Math.pow
 norm = (a, b) => sqrt(pow(a, 2) + pow(b, 2))
@@ -76,7 +77,7 @@ window.onload = function() {
 function mouseMoveCallback(evt) {
 	mask = drawGood(canvas, evt, mask, GOOD, BORDER, brushRadius);
 	borderPixels = getBorderPixels(mask);
-	// goal = getMousePos(canvas, evt);
+	goal = getMousePos(canvas, evt);
 	// reachablePixels = getPixelsThatCanReach(borderPixels, goal);
 }
 canvas.addEventListener('mousedown', function(ev) {

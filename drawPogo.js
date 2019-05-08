@@ -8,11 +8,7 @@
  */
 
 function drawPogo(ctx, pogo) {
-  ctx.beginPath();
-
-  // pogo dynamics
-  pogo.l = pogo.l0
-  // the central ball gets teleported out of walls with preserved energy (should never happen)
+  // COLLISION DETECTION //
   var Fx = 0,
       Fy = 0,
       Fx_inner = 0,
@@ -28,7 +24,7 @@ function drawPogo(ctx, pogo) {
       maybecollision.push(border)
       thwall = Math.atan2(pogo.x - border.x, -(pogo.y - border.y))  // to make down 0 angle
       border.th = thwall
-      Fx += delta*pogo.k*Math.sin(Math.PI+thwall)
+      Fx += delta*pogo.k*Math.sin(Math.PI+thwall) // only used for controller
       Fy += delta*pogo.k*Math.cos(Math.PI+thwall)
       if (delta > pogo.l0) {
         Fx_inner += (delta-pogo.l0)*pogo.k_head*Math.sin(Math.PI+thwall)
@@ -37,49 +33,55 @@ function drawPogo(ctx, pogo) {
     }
   }
 
-  // CONTROLLER
-  if (pogo.t < -Math.PI)  pogo.t += 2*Math.PI
-  if (pogo.t > Math.PI)   pogo.t -= 2*Math.PI
-  delta_t = Math.atan2(Fx, -Fy) - pogo.t
-  if (delta_t < -Math.PI)  delta_t += 2*Math.PI
-  if (delta_t > Math.PI)   delta_t -= 2*Math.PI
-  // delta_t = Math.max(Math.min(delta_t, 1), -1) // velocity limit
-  // NOTE: if velocity limit is imposed, system gains energy by rotating
-  //       spring through the ground :(
-  pogo.t += delta_t
-  // END CONTROLLER
-
-  if (Fx_inner != 0 || Fy_inner != 0) { // bouncy inner circle
-    pogo.l = 0
-    Fx = Fx_inner
-    Fy = Fy_inner
-    pogo.t = Math.atan2(Fx, -Fy)
-    Fx = -Fx_inner  // HACK: sign error somewhere
-  } else {
-    minangleSpread = Math.atan(pogo.l0, pogo.r)/6
-    if (Fx != 0 || Fy != 0) {
-      for (var i=0; i<maybecollision.length; i++) {
-        border = maybecollision[i]
-        ctx.beginPath();
-        border.th = Math.atan2(-(pogo.x - border.x), -(pogo.y - border.y))
-        ctx.strokeStyle = "gray"
-        delta = R - dist(pogo, border)
-        if (Math.abs(border.th-pogo.t) < minangleSpread) {
-          pogo.l = Math.min(pogo.l, pogo.l0 - delta);
-          ctx.strokeStyle = "red"
-        }
-        ctx.moveTo(pogo.x, pogo.y);
-        ctx.lineTo(border.x, border.y);
-        // ctx.stroke();
-      }
-    } else {
-      pogo.t -= 0.1*(pogo.t - Math.atan2(pogo.vx, pogo.vy))  // 1st-order counterclockwise return to upright
-    }
-
-    Fx = (pogo.l0-pogo.l)*pogo.k*Math.sin(Math.PI+pogo.t)
-    Fy = (pogo.l0-pogo.l)*pogo.k*Math.cos(Math.PI+pogo.t)
+  // CONTROLLER //
+  if (Fx != 0 || Fy != 0) {
+    if (pogo.t < -Math.PI)  pogo.t += 2*Math.PI
+    if (pogo.t > Math.PI)   pogo.t -= 2*Math.PI
+    delta_t = Math.atan2(Fx, -Fy) - pogo.t
+    if (delta_t < -Math.PI)  delta_t += 2*Math.PI
+    if (delta_t > Math.PI)   delta_t -= 2*Math.PI
+    // delta_t = Math.max(Math.min(delta_t, 1), -1) // velocity limit
+    // NOTE: if velocity limit above imposed, system gains energy by rotating
+    //       spring through the ground :(
+    pogo.t += delta_t
+  } else {  // align with ballistic trajectory
+    pogo.t -= 0.1*(pogo.t - Math.atan2(pogo.vx, pogo.vy))
   }
 
+  // COLLISION PHYSICS //
+  pogo.l = pogo.l0  // reset length
+  // NOTE: the leg instantaneously adopts the correct length, creating energy
+  collisionAngleSpread = Math.atan(pogo.l0, pogo.r)/6
+  if (Fx != 0 || Fy != 0) {
+    for (var i=0; i<maybecollision.length; i++) {
+      border = maybecollision[i]
+      ctx.beginPath();
+      border.th = Math.atan2(-(pogo.x - border.x), -(pogo.y - border.y))
+      ctx.strokeStyle = "gray"
+      delta = R - dist(pogo, border)
+      if (Math.abs(border.th-pogo.t) < collisionAngleSpread) {
+        pogo.l = Math.max(0, Math.min(pogo.l, pogo.l0 - delta));
+        ctx.strokeStyle = "red"
+      }
+      ctx.moveTo(pogo.x, pogo.y);
+      ctx.lineTo(border.x, border.y);
+      // DEBUG: show possible collisions (gray) and actual collisions (red)
+      ctx.stroke();
+    }
+  }
+
+  // spring collision
+  Fx = (pogo.l0-pogo.l)*pogo.k*Math.sin(Math.PI+pogo.t)
+  Fy = (pogo.l0-pogo.l)*pogo.k*Math.cos(Math.PI+pogo.t)
+
+  // inner circle collision
+  if (Fx_inner != 0 || Fy_inner != 0) {
+    pogo.l = 0 // hide leg
+    Fx += -Fx_inner  // HACK: sign error somewhere
+    Fy += Fy_inner
+  }
+
+  // INTEGRATION //
   pogo.ax = Fx/pogo.m
   pogo.ay = Fy/pogo.m + 98.1
   pogo.vx += pogo.ax*DT
@@ -87,7 +89,8 @@ function drawPogo(ctx, pogo) {
   pogo.x += pogo.vx*DT
   pogo.y += pogo.vy*DT
 
-	// Leg : spacer*4 + segmentHeight*3 = pogo.l
+  // DRAW POGO //
+	// Leg
   if (pogo.l > 0) {
     ctx.beginPath();
     nsegments = 3
@@ -112,10 +115,10 @@ function drawPogo(ctx, pogo) {
         ctx.fill()
       }
 
-  		// Undo Transform
-  		ctx.translate(pogo.x, pogo.y);
-  		ctx.rotate(pogo.t);
-  		ctx.translate(-pogo.x, -pogo.y);
+      // Undo Transform
+      ctx.translate(pogo.x, pogo.y);
+      ctx.rotate(pogo.t);
+      ctx.translate(-pogo.x, -pogo.y);
   	}
   }
 
