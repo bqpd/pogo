@@ -55,18 +55,11 @@
    return [Fx, Fy]
  }
 
- function eulerIntegration(pogo, [Fx, Fy], dt) {
-   // NOTE: tried doing a higher-order integration technique but for some
-   //       reason it just sucked energy out of the system????
-   pogo.ax = Fx/pogo.m
-   pogo.ay = Fy/pogo.m + 98.1
-   pogo.vx += pogo.ax*dt
-   pogo.vy += pogo.ay*dt
-   pogo.x += pogo.vx*dt
-   pogo.y += pogo.vy*dt
- }
-
 function drawPogo(ctx, pogo) {
+  // time-step independent for constant accel (i.e. ballistic)
+  pogo.x += pogo.vx*DT + 0.5*pogo.ax*pow(DT, 2)
+  pogo.y += pogo.vy*DT + 0.5*pogo.ay*pow(DT, 2)
+
   var [maybeCollisions,
        Dx, Dy] = getPossibleCollisions(pogo, pogo.r + pogo.l0, borderPixels)
 
@@ -85,8 +78,14 @@ function drawPogo(ctx, pogo) {
     pogo.t -= 0.1*(pogo.t - Math.atan2(pogo.vx, pogo.vy))
   }
 
-  eulerIntegration(pogo, getForces(pogo, maybeCollisions), DT)
-  getForces(pogo, maybeCollisions) // sets leg length to exactly touch the wall
+  var [Fx, Fy] = getForces(pogo, maybeCollisions)
+  new_ax = Fx/pogo.m
+  new_ay = Fy/pogo.m + 98.1
+  // trapezoidal integration of velocity
+  pogo.vx += (new_ax + pogo.ax)*DT/2
+  pogo.vy += (new_ay + pogo.ay)*DT/2
+  pogo.ax = new_ax
+  pogo.ay = new_ay
 
   // RESTART POGO? //
   if (pogo.x < 0 || pogo.x > canvas.width ||
