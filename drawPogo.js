@@ -7,37 +7,74 @@
  * @param {object}    pogo   The Pogo character object.
  */
 
+ function getPossibleCollisions(pogo, R, pixels) {
+   var Dx = 0,
+       Dy = 0,
+       maybeCollisions = [];
+   for (var i=0; i<pixels.length; i++) {
+     border = pixels[i]
+     d = dist(pogo, border)
+     delta = R - d;
+     if (delta > 0) {
+       maybeCollisions.push(border)
+       border.th = Math.atan2(-(pogo.x - border.x), -(pogo.y - border.y))  // to make down 0 angle
+       Dx += delta*Math.sin(Math.PI+border.th) // component sum of deltas
+       Dy += delta*Math.cos(Math.PI+border.th)
+     }
+   }
+
+   return [maybeCollisions, Dx, Dy]
+ }
+
+ function getForces(pogo, maybeCollisions) {
+   oldl = pogo.l
+   // NOTE: the leg instantaneously adopts the correct length, creating energy
+   pogo.l = pogo.l0  // reset length
+   collisionAngleSpread = Math.atan(pogo.l0, pogo.r)/12
+   for (var i=0; i<maybeCollisions.length; i++) {
+     border = maybeCollisions[i]
+     if (Math.abs(border.th-pogo.t) < collisionAngleSpread) {
+       pogo.l = Math.max(0, Math.min(pogo.l, dist(pogo, border) - pogo.r));
+     }
+   }
+
+   // spring collision
+   Fx = (pogo.l0-pogo.l)*pogo.k*Math.sin(Math.PI+pogo.t)
+   Fy = (pogo.l0-pogo.l)*pogo.k*Math.cos(Math.PI+pogo.t)
+
+   // head collision
+   var [insideHead,
+        Dx_head, Dy_head] = getPossibleCollisions(pogo, pogo.r, maybeCollisions)
+   Fx += pogo.k_head*Dx_head
+   Fy += pogo.k_head*Dy_head
+   if (insideHead.length) {
+     Fx -= pogo.vx*pogo.c_head  // generic linear drag to make it less bouncy
+     Fy -= pogo.vy*pogo.c_head
+   }
+
+   return [Fx, Fy]
+ }
+
+ function eulerIntegration(pogo, [Fx, Fy], dt) {
+   // NOTE: tried doing a higher-order integration technique but for some
+   //       reason it just sucked energy out of the system????
+   pogo.ax = Fx/pogo.m
+   pogo.ay = Fy/pogo.m + 98.1
+   pogo.vx += pogo.ax*dt
+   pogo.vy += pogo.ay*dt
+   pogo.x += pogo.vx*dt
+   pogo.y += pogo.vy*dt
+ }
+
 function drawPogo(ctx, pogo) {
-  // COLLISION DETECTION //
-  var Fx = 0,
-      Fy = 0,
-      Fx_inner = 0,
-      Fy_inner = 0,
-      maxdelta = 0,
-      R = pogo.r + pogo.l0,
-      maybecollision = [];
-  for (var i=0; i<borderPixels.length; i++) {
-    border = borderPixels[i]
-    d = dist(pogo, border)
-    delta = R - d;
-    if (delta > 0) {
-      maybecollision.push(border)
-      thwall = Math.atan2(pogo.x - border.x, -(pogo.y - border.y))  // to make down 0 angle
-      border.th = thwall
-      Fx += delta*pogo.k*Math.sin(Math.PI+thwall) // only used for controller
-      Fy += delta*pogo.k*Math.cos(Math.PI+thwall)
-      if (delta > pogo.l0) {
-        Fx_inner += (delta-pogo.l0)*pogo.k_head*Math.sin(Math.PI+thwall)
-        Fy_inner += (delta-pogo.l0)*pogo.k_head*Math.cos(Math.PI+thwall)
-      }
-    }
-  }
+  var [maybeCollisions,
+       Dx, Dy] = getPossibleCollisions(pogo, pogo.r + pogo.l0, borderPixels)
 
   // CONTROLLER //
-  if (Fx != 0 || Fy != 0) {
+  if (maybeCollisions.length) {
     if (pogo.t < -Math.PI)  pogo.t += 2*Math.PI
     if (pogo.t > Math.PI)   pogo.t -= 2*Math.PI
-    delta_t = Math.atan2(Fx, -Fy) - pogo.t
+    delta_t = Math.atan2(-Dx, -Dy) - pogo.t
     if (delta_t < -Math.PI)  delta_t += 2*Math.PI
     if (delta_t > Math.PI)   delta_t -= 2*Math.PI
     // delta_t = Math.max(Math.min(delta_t, 1), -1) // velocity limit
@@ -48,53 +85,14 @@ function drawPogo(ctx, pogo) {
     pogo.t -= 0.1*(pogo.t - Math.atan2(pogo.vx, pogo.vy))
   }
 
-  // COLLISION PHYSICS //
-  oldl = pogo.l
-  pogo.l = pogo.l0  // reset length
-  // NOTE: the leg instantaneously adopts the correct length, creating energy
-  collisionAngleSpread = Math.atan(pogo.l, pogo.r)/12
-  if (Fx != 0 || Fy != 0) {
-    for (var i=0; i<maybecollision.length; i++) {
-      border = maybecollision[i]
-      ctx.beginPath();
-      border.th = Math.atan2(-(pogo.x - border.x), -(pogo.y - border.y))
-      ctx.strokeStyle = "gray"
-      delta = R - dist(pogo, border)
-      if (Math.abs(border.th-pogo.t) < collisionAngleSpread) {
-        pogo.l = Math.max(0, Math.min(pogo.l, pogo.l0 - delta));
-        ctx.strokeStyle = "red"
-      }
-      ctx.moveTo(pogo.x, pogo.y);
-      ctx.lineTo(border.x, border.y);
-      // DEBUG: show possible collisions (gray) and actual collisions (red)
-      // ctx.stroke(); // uncomment to show collisions
-    }
-  }
+  eulerIntegration(pogo, getForces(pogo, maybeCollisions), DT)
+  getForces(pogo, maybeCollisions) // sets leg length to exactly touch the wall
 
-  // spring collision
-  Fx = (pogo.l0-pogo.l)*pogo.k*Math.sin(Math.PI+pogo.t)
-  Fy = (pogo.l0-pogo.l)*pogo.k*Math.cos(Math.PI+pogo.t)
-
-  // spring damping (puts a ceiling on energy-pumping)
-  Fx += pow(oldl-pogo.l, 3)/DT*pogo.c*Math.sin(Math.PI+pogo.t)
-  Fy += pow(oldl-pogo.l, 3)/DT*pogo.c*Math.cos(Math.PI+pogo.t)
-
-  // inner circle collision
-  Fx += -Fx_inner  // HACK: sign error somewhere
-  Fy += Fy_inner
-
-  // INTEGRATION //
-  pogo.ax = Fx/pogo.m
-  pogo.ay = Fy/pogo.m + 98.1
-  pogo.vx += pogo.ax*DT
-  pogo.vy += pogo.ay*DT
-  pogo.x += pogo.vx*DT
-  pogo.y += pogo.vy*DT
-
-  if (pogo.x < 0 || pogo.x > canvas.width || pogo.y < 0 || pogo.y > canvas.height) {
+  // RESTART POGO? //
+  if (pogo.x < 0 || pogo.x > canvas.width ||
+      pogo.y < 0 || pogo.y > canvas.height) {
     pogo.vx = pogo.vy = 0;
-    pogo.x = pogo.restart_x
-    pogo.y = pogo.restart_y
+    [pogo.x, pogo.y] = [pogo.restart_x, pogo.restart_y];
   }
 
   // DRAW POGO //
@@ -118,7 +116,7 @@ function drawPogo(ctx, pogo) {
                      segmentWidth, segmentHeight);
       } else {
         ctx.ellipse(pogo.x,
-                    pogo.y + pogo.r + spacer*(s+1) + segmentHeight*s - pogo.r_wheel/2 - 1,
+                    pogo.y + pogo.r + spacer*(s+1) + segmentHeight*s - pogo.r_wheel/2,
                     pogo.r_wheel, pogo.r_wheel, 0, 0, 2*Math.PI);
         ctx.fill()
       }
@@ -134,12 +132,14 @@ function drawPogo(ctx, pogo) {
   ctx.beginPath();
   ctx.fillStyle = pogo.headColor;
 
-  squish = 0.3
+  // with some nice physics-based squish
+  accel = pow(norm(pogo.ax, pogo.ay)/1e4, 0.5)
+  squishfactor = 0.3*Math.min(accel, 1)
   ctx.ellipse(pogo.x,
-              pogo.y + squish*pogo.r*(1 - pogo.l/pogo.l0),
-              pogo.r*(1 + squish - squish*pogo.l/pogo.l0),
-              pogo.r*(1 - squish + squish*pogo.l/pogo.l0),
-              -pogo.t,
+              pogo.y + pogo.r*squishfactor,
+              pogo.r*(1 + squishfactor),
+              pogo.r*(1 - squishfactor),
+              -Math.atan2(pogo.ax, pogo.ay),
               0, 2*Math.PI);
   ctx.fill();
 }

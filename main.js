@@ -54,6 +54,7 @@ var pogo = {
 	k: 300,
 	c: 0.01,
 	k_head: 500,
+	c_head: 5,
 	r: 8,
 	r_wheel: 3,
 	headColor: '#F45947',
