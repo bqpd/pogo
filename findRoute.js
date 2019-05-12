@@ -7,7 +7,7 @@ function clearRoute(borderPixels) {
 }
 
 function findRoute(goal, cumulative_cost=0) {
-	for (let x=0; x<goal.canBeReachedFrom; x++) {
+	for (let x=0; x<goal.canBeReachedFrom.length; x++) {
     pixel = goal.canBeReachedFrom[i]
     if (pixel.cost <= cumulative_cost) {
       pixel.cost = cumulative_cost
