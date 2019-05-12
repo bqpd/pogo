@@ -41,7 +41,12 @@ function labelGoodRegion(mask, xc, yc, radius, GOOD, BORDER, BAD, borderPixels) 
 						borderPixels.push(new Point(x,y));
 					} else {
 						mask[x][y] = GOOD;
-						newGood.push(new Point(x,y));
+						thisPt = new Point(x,y);
+						newGood.push(thisPt);
+						var indexOfPt = indexOfPoint(borderPixels, thisPt);
+						if (indexOfPt !== -1) {
+							borderPixels.splice(indexOfPt, 1);
+						}
 					}
 				}
 			}
