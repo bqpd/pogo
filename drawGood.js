@@ -23,10 +23,7 @@ function drawGood(canvas, evt, mask, GOOD, BORDER, BAD, borderPixels, brushRadiu
 
 function getMousePos(canvas, evt) {
 	var rect = canvas.getBoundingClientRect();
-	return {
-	  x: evt.clientX - rect.left,
-	  y: evt.clientY - rect.top
-	};
+	return new Point(evt.clientX - rect.left, evt.clientY - rect.top);
 }
 
 function labelGoodRegion(mask, xc, yc, radius, GOOD, BORDER, BAD, borderPixels) {

@@ -2,6 +2,7 @@
 const BAD = 0;
 const GOOD = 1;
 const BORDER = 2;
+const TEST = 3;
 const FPS = 60;
 const DT = 1/FPS;
 run = true // set to false to halt animation
@@ -17,6 +18,7 @@ var color = [];
 color[BAD] = hex2rgb('#4C453F');
 color[GOOD] = hex2rgb('#B0A091');
 color[BORDER] = hex2rgb('#F6E6D7');
+color[TEST] = hex2rgb('#00FF00')
 brushRadius = 40;
 
 // Define Canvas
@@ -81,7 +83,19 @@ window.onload = function() {
 function mouseMoveCallback(evt) {
 	[mask, borderPixels] = drawGood(canvas, evt, mask, GOOD, BORDER, BAD, borderPixels, brushRadius);
 	goal = getMousePos(canvas, evt);
-	// reachablePixels = getPixelsThatCanReach(borderPixels, goal);
+
+	for (let x=0; x<mask.length; x++) {
+		for (let y=0; y<mask[0].length; y++) {
+			if (mask[x][y]==TEST) {
+				mask[x][y]=BORDER;
+			}
+		}
+	}
+	reachablePixels = getPixelsThatCanReach(borderPixels, goal, mask);
+	for (let i=0; i<reachablePixels.length; i++) {
+		mask[reachablePixels[i].x][reachablePixels[i].y] = TEST;
+	}
+	colorCanvas(canvas.getContext('2d'), mask, color);
 }
 canvas.addEventListener('mousedown', function(ev) {
 	mouseMoveCallback(ev);
