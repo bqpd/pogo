@@ -11,7 +11,6 @@
 
 function drawFrame(ctx, mask, color, pogo) {
 	colorCanvas(ctx, mask, color, pogo);
-	//pogo = updatePogo(pogo,mask);
 	drawPogo(ctx, pogo);
 
 	if (run) {

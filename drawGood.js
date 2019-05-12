@@ -9,48 +9,56 @@
  * @param {Number[][]}	mask			Array of integers whose indeces correspond to locations on the canvas and values to colors.
  * @param {number}		GOOD 			The index of the color array with the color of the "good" region.
  * @param {number}		BORDER 			The index of the color array with the color of the border between "good" and "bad" regions.
+ * @param {number}		BAD 			The index of the color array with the color of the "bad" region.
+ * @param {Object[]}	borderPixels	The array of pixels along the border.
  * @param {number}		brushRadius 	The radius of the brush with which the user paints the mask.
  * @returns {Number[][]}	The updated mask.
+ * @returns {Object[]}		The updated border pixel array.
  */
 
-function drawGood(canvas, evt, mask, GOOD, BORDER, brushRadius) {
+function drawGood(canvas, evt, mask, GOOD, BORDER, BAD, borderPixels, brushRadius) {
 	var mousePos = getMousePos(canvas, evt);
-	return labelGoodRegion(mask, mousePos.x, mousePos.y, brushRadius, GOOD, BORDER);
+	return labelGoodRegion(mask, mousePos.x, mousePos.y, brushRadius, GOOD, BORDER, BAD, borderPixels);
 }
 
 function getMousePos(canvas, evt) {
-    var rect = canvas.getBoundingClientRect();
-    return {
-      x: evt.clientX - rect.left,
-      y: evt.clientY - rect.top
-    };
+	var rect = canvas.getBoundingClientRect();
+	return {
+	  x: evt.clientX - rect.left,
+	  y: evt.clientY - rect.top
+	};
 }
 
-function labelGoodRegion(mask, xc, yc, radius, GOOD, BORDER) {
+function labelGoodRegion(mask, xc, yc, radius, GOOD, BORDER, BAD, borderPixels) {
+	var newGood = [];
 	// Set square around cursor to be GOOD
 	for (let x=xc-radius; x<xc+radius; x++) {
 		for (let y=yc-radius; y<yc+radius; y++) {
 			if (x>=0 && x<mask.length && y>=0 && y<mask[0].length) {
-        if (pow(x-xc,2) + pow(y-yc,2) < pow(radius,2)) {
-            mask[x][y] = GOOD;
-        }
-			}
-		}
-	}
-
-	// Find and label new border of GOOD region.
-	for (let x=0; x<mask.length; x++) {
-		for (let y=0; y<mask[0].length; y++) {
-			if (mask[x][y]==GOOD) {
-				if (x==0 || x==mask.length-1 || y==0 || y==mask[0].length-1
-					|| mask[x-1][y-1]==BAD || mask[x-1][y]==BAD || mask[x-1][y+1]==BAD
-					|| mask[x][y-1]==BAD || mask[x][y+1]==BAD
-					|| mask[x+1][y+1]==BAD || mask[x+1][y]==BAD || mask[x+1][y+1]==BAD) {
-					 mask[x][y] = BORDER;
+				if (pow(x-xc,2) + pow(y-yc,2) <= pow(radius,2)) {
+					if (x==0 || x==mask.length-1 || y==0 || y==mask[0].length-1) {
+						mask[x][y] = BORDER;
+						borderPixels.push(new Point(x,y));
+					} else {
+						mask[x][y] = GOOD;
+						newGood.push(new Point(x,y));
+					}
 				}
 			}
 		}
 	}
 
-	return mask;
+	// Find and label new border of GOOD region.
+	for (let p=0; p<newGood.length; p++) {
+		let x=newGood[p].x;
+		let y=newGood[p].y;
+		if (mask[x-1][y-1]==BAD || mask[x-1][y]==BAD || mask[x-1][y+1]==BAD ||
+			mask[x][y-1]==BAD || mask[x][y+1]==BAD ||
+			mask[x+1][y-1]==BAD || mask[x+1][y]==BAD || mask[x+1][y+1]==BAD) {
+			mask[x][y] = BORDER;
+			borderPixels.push(new Point(x,y));
+		}
+	}
+
+	return [mask, borderPixels];
 }

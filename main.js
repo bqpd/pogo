@@ -67,8 +67,8 @@ pogo.restart_y = pogo.y;
 var goal = new Point(pogo.x, pogo.y);
 
 // Initialize Mask around Pogo
-mask = labelGoodRegion(mask, pogo.x, pogo.y, brushRadius, GOOD, BORDER);
-borderPixels = getBorderPixels(mask);
+var borderPixels = [];
+[mask, borderPixels] = labelGoodRegion(mask, pogo.x, pogo.y, brushRadius, GOOD, BORDER, BAD, borderPixels);
 
 // Animate
 window.onload = function() {
@@ -79,12 +79,12 @@ window.onload = function() {
 
 // Updates the mask when the mouse is moved when the mouse button is down.
 function mouseMoveCallback(evt) {
-	mask = drawGood(canvas, evt, mask, GOOD, BORDER, brushRadius);
-	borderPixels = getBorderPixels(mask);
+	[mask, borderPixels] = drawGood(canvas, evt, mask, GOOD, BORDER, BAD, borderPixels, brushRadius);
 	goal = getMousePos(canvas, evt);
 	// reachablePixels = getPixelsThatCanReach(borderPixels, goal);
 }
 canvas.addEventListener('mousedown', function(ev) {
+	mouseMoveCallback(ev);
 	canvas.addEventListener('mousemove', mouseMoveCallback);
 });
 
