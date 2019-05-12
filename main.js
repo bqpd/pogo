@@ -72,6 +72,13 @@ var goal = new Point(pogo.x, pogo.y);
 var borderPixels = [];
 [mask, borderPixels] = labelGoodRegion(mask, pogo.x, pogo.y, brushRadius, GOOD, BORDER, BAD, borderPixels);
 
+// Construct worker to handle task of tree building
+var worker = new Worker('worker.js');
+worker.addEventListener('message', function(e) {
+	goal = e.data[0];
+	borderPixels = e.data[1];
+});
+
 // Animate
 window.onload = function() {
 	window.requestAnimationFrame(function(ts) {
@@ -84,6 +91,7 @@ function mouseMoveCallback(evt) {
 	[mask, borderPixels] = drawGood(canvas, evt, mask, GOOD, BORDER, BAD, borderPixels, brushRadius);
 	goal = getMousePos(canvas, evt);
 
+	/*/ NICK HACK XXX
 	for (let x=0; x<mask.length; x++) {
 		for (let y=0; y<mask[0].length; y++) {
 			if (mask[x][y]==TEST) {
@@ -91,11 +99,16 @@ function mouseMoveCallback(evt) {
 			}
 		}
 	}
-	reachablePixels = getPixelsThatCanReach(borderPixels, goal, mask);
-	for (let i=0; i<reachablePixels.length; i++) {
-		mask[reachablePixels[i].x][reachablePixels[i].y] = TEST;
+	// END NICK HACK */
+
+	worker.postMessage([goal, borderPixels, mask]);
+	
+	/*/ NICK HACK XXX
+	for (let i=0; i<goal.canBeReachedFrom.length; i++) {
+		mask[goal.canBeReachedFrom[i].x][goal.canBeReachedFrom[i].y] = TEST;
 	}
 	colorCanvas(canvas.getContext('2d'), mask, color);
+	// END NICK HACK */
 }
 canvas.addEventListener('mousedown', function(ev) {
 	mouseMoveCallback(ev);
