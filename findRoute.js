@@ -15,14 +15,11 @@ function findRoute(goal, cumulative_cost=0) {
       pixel.cost = cumulative_cost
       pixel.partOfAnOptimalPathTo = [goal]
     } else if (pixel.cost == cumulative_cost) {
-      var already_there = false
       for (let i=0; i<pixel.partOfAnOptimalPathTo.length; i++) {
-        if (Object.is(goal, pixel.partOfAnOptimalPathTo[i])) {
-          already_there = true
-          break
-        }
+        if (Object.is(goal, pixel.partOfAnOptimalPathTo[i]))
+          return
       }
-      if (!already_there)  pixel.partOfAnOptimalPathTo.push(goal)
+      pixel.partOfAnOptimalPathTo.push(goal)
     }
     var link_cost = 1  // NOTE: could also be a calculation of travel time, etc.
     findRoute(pixel, cumulative_cost + link_cost) // only run this once
