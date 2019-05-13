@@ -1,4 +1,11 @@
 function Point(x,y) {
 	this.x = x;
 	this.y = y;
+	this.canBeReachedFrom = [];
 }
+
+Point.prototype.clone = function() {
+	var newPt = new Point(this.x, this.y);
+	newPt.canBeReachedFrom = this.canBeReachedFrom.slice();
+	return newPt;
+};
