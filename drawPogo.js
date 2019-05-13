@@ -95,6 +95,9 @@ function drawPogo(ctx, pogo) {
   }
 
   // DRAW POGO //
+  if (chosenroute.length)
+    drawRoute(chosenroute, pogo, ctx)
+
   // Leg
   if (pogo.l > 0) {
     ctx.beginPath();

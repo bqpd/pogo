@@ -6,6 +6,7 @@ const TEST = 3;
 const FPS = 60;
 const DT = 1/FPS;
 run = true // set to false to halt animation
+chosenroute = []
 
 // Convenient Functions
 sqrt = Math.sqrt
@@ -93,16 +94,14 @@ function mouseMoveCallback(evt) {
 		}
 	}
 	// END NICK HACK */
-
-	goal.canBeReachedFrom = getPixelsThatCanReach(borderPixels, goal, mask, GOOD);
-	var reachablePixels = goal.canBeReachedFrom;
-	var lastReachablePixels = [];
-	while (lastReachablePixels.length!==reachablePixels.length) {
-		// Clone reachablePixels into lastReachablePixels
+	/*while lastReachablePixels.length!==reachablePixels.length) {
+		Clone reachablePixels into lastReachablePixels
 		lastReachablePixels = [];
 		for (let p=0; p<reachablePixels.length; p++) {
 			lastReachablePixels.push(reachablePixels[p].clone());
-		}
+		// }
+
+		console.log(getPixelsThatCanReach(borderPixels, goal, mask, GOOD))
 
 		var unreachedPoints = getDisjunctiveUnion(borderPixels, reachablePixels);
 		// For each point that can reach the goal
@@ -120,7 +119,7 @@ function mouseMoveCallback(evt) {
 		}
 
 		reachablePixels = getDisjunctiveUnion(borderPixels, unreachedPoints);
-	}
+	}*/
 
 	/*/ NICK HACK XXX
 	for (let i=0; i<reachablePixels.length; i++) {
@@ -137,4 +136,42 @@ canvas.addEventListener('mousedown', function(ev) {
 // Stops updating the mask once the mouse button is up.
 canvas.addEventListener('mouseup', function(evt) {
 	canvas.removeEventListener('mousemove', mouseMoveCallback);
+
+	clearRoute(borderPixels)
+	clearRoute([goal])
+
+	cost = 1
+	goal.canBeReachedFrom = getPixelsThatCanReach(borderPixels, goal, mask, GOOD, cost);
+
+	lastReachablePixels = goal.canBeReachedFrom;
+	while (lastReachablePixels.length) {
+		var unique_reachs = 0
+		var new_reachable_pixels = []
+		cost++
+		for (let i=0; i<lastReachablePixels.length; i++) {
+			pixel = lastReachablePixels[i]
+			pixel.canBeReachedFrom = getPixelsThatCanReach(borderPixels, pixel, mask, GOOD, cost);
+			if (pixel.canBeReachedFrom.length > unique_reachs) {
+				lastpixel = pixel
+				unique_reachs = pixel.canBeReachedFrom.length
+			}
+			if (pixel.canBeReachedFrom.length > 0) {
+				new_reachable_pixels = new_reachable_pixels.concat(pixel.canBeReachedFrom)
+			}
+		}
+		lastReachablePixels = new_reachable_pixels
+	}
+
+	clearRoute(borderPixels)
+	clearRoute([goal])
+	findRoute(goal)
+	var maxDist = 0
+	for (let i=0; i<lastpixel.canBeReachedFrom.length; i++) {
+		pixel = lastpixel.canBeReachedFrom[i]
+		if (dist(pixel, lastpixel) > maxDist) {
+			startpixel = pixel
+			maxDist = dist(pixel, lastpixel)
+		}
+	}
+	chosenroute = chooseRoute(startpixel)
 });

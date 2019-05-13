@@ -11,19 +11,20 @@ function findRoute(goal, cumulative_cost=0) {
     let pixel = goal.canBeReachedFrom[i]
     let link_cost = 1  // NOTE: could also be a calculation of travel time, etc.
     let cost = cumulative_cost + link_cost
-    if (pixel.cost < cost) {
-      return
-    } else if (pixel.cost == cost) {
-      for (let i=0; i<pixel.partOfAnOptimalPathTo.length; i++) {
-        if (Object.is(goal, pixel.partOfAnOptimalPathTo[i]))
-          return // we've already been here with this cost, no need to loop
-      }
-      pixel.partOfAnOptimalPathTo.push(goal)
-    } else if (pixel.cost > cost) {
+    // if (pixel.cost < cost) {
+    //   continue
+    // NOTE: remove random via equalities for now
+    // } else if (pixel.cost == cost) {
+    //   for (let i=0; i<pixel.partOfAnOptimalPathTo.length; i++) {
+    //     if (Object.is(goal, pixel.partOfAnOptimalPathTo[i]))
+    //       return // we've already been here with this cost, no need to loop
+    //   }
+    //   pixel.partOfAnOptimalPathTo.push(goal)
+    if (pixel.cost > cost) {
       pixel.cost = cost
       pixel.partOfAnOptimalPathTo = [goal]
+      findRoute(pixel, cost)
     }
-    findRoute(pixel, cost)
 	}
 }
 
@@ -37,21 +38,26 @@ function chooseRoute(start) {
       next_waypoint.partOfAnOptimalPathTo.length) {
     next_waypoints = chooseRoute(next_waypoint)
   } else {
-    next_waypoints = []
+    next_waypoints = [next_waypoint, []]
   }
 
   return [start, next_waypoints]
 }
 
-function drawRoute(route, pogo, ctx) {  console.log(goal)
+function drawRoute(route, pogo, ctx) {
   var [waypoint, next_waypoints] = route
 
   ctx.beginPath();
-  ctx.fillStyle = "blue";
+  ctx.fillStyle = "cyan";
   ctx.ellipse(waypoint.x,
               waypoint.y,
               pogo.r, pogo.r,
               0, 0, 2*Math.PI);
+  ctx.fill();
+  ctx.beginPath();
+  ctx.fillStyle = "black";
+  text = waypoint.cost != Infinity ? waypoint.cost : 0
+  ctx.fillText(text, waypoint.x-4, waypoint.y+4)
   ctx.fill();
 
   // if it's not the goal yet, keep going!
@@ -61,7 +67,8 @@ function drawRoute(route, pogo, ctx) {  console.log(goal)
 }
 
 // UNIT TESTS //
-var pointA = {name:"A", canBeReachedFrom: []},
+{
+let pointA = {name:"A", canBeReachedFrom: []},
     pointB = {name:"B", canBeReachedFrom: [pointA]},
     pointC = {name:"C", canBeReachedFrom: [pointB, pointA]},
     pointF = {name:"F", canBeReachedFrom: [pointB]},
@@ -88,7 +95,7 @@ console.assert(pointC.partOfAnOptimalPathTo[1] == pointE)
 console.assert(pointD.partOfAnOptimalPathTo[0] == goal)
 console.assert(pointE.partOfAnOptimalPathTo[0] == goal)
 console.assert(pointF.partOfAnOptimalPathTo[0] == pointD)
-console.log(points)
+// console.log(points)
 
 var viaD = false, viaE = false
 for (let i=0; i<10; i++) {
@@ -99,3 +106,4 @@ for (let i=0; i<10; i++) {
   if (route[1][1][0] == pointE)  viaE = true
 }
 console.assert(viaD && viaE)  // chances of this failing are 2^-9, right?
+}

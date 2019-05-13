@@ -1,8 +1,11 @@
-function getPixelsThatCanReach(points, goal, mask, GOOD) {
+function getPixelsThatCanReach(points, goal, mask, GOOD, cost) {
 	reachablePixels = [];
 	for (let p=0; p<points.length; p++) {
-		if (canPixelReach(points[p],goal,mask, GOOD)) {
-			reachablePixels.push(points[p]);
+		if (points[p].cost > cost) {
+			if (canPixelReach(points[p], goal, mask, GOOD)) {
+				points[p].cost = cost
+				reachablePixels.push(points[p]);
+			}
 		}
 	}
 	return reachablePixels;
@@ -26,7 +29,7 @@ function canPixelReach(point, goal, mask, GOOD) {
 	var m = (y2-y1)/(x2-x1);
 	function b(a) {return m-(x1+x2)*a;}
 	function c(a) {return y1-x1*m+x1*x2*a;}
-	
+
 	// Test a's
 	for (let a=0.01; a<1; a+=0.01) {
 		function f(x) {return a*x*x+b(a)*x+c(a);}
