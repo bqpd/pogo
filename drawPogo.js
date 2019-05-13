@@ -7,6 +7,8 @@
  * @param {object}    pogo   The Pogo character object.
  */
 
+contactpoint = {}
+
  function getPossibleCollisions(pogo, R, pixels) {
    var Dx = 0,
        Dy = 0,
@@ -34,6 +36,7 @@
    for (var i=0; i<maybeCollisions.length; i++) {
      border = maybeCollisions[i]
      if (Math.abs(border.th-pogo.t) < collisionAngleSpread) {
+       contactpoint = border
        pogo.l = Math.max(0, Math.min(pogo.l, dist(pogo, border) - pogo.r));
      }
    }
@@ -95,9 +98,6 @@ function drawPogo(ctx, pogo) {
   }
 
   // DRAW POGO //
-  if (chosenroute.length)
-    drawRoute(chosenroute, pogo, ctx)
-
   // Leg
   if (pogo.l > 0) {
     ctx.beginPath();
@@ -144,4 +144,9 @@ function drawPogo(ctx, pogo) {
               -Math.atan2(pogo.ax, pogo.ay),
               0, 2*Math.PI);
   ctx.fill();
+
+  if (routeReady && contactpoint.partOfAnOptimalPathTo != undefined) {
+    chosenroute = chooseRoute(contactpoint)
+    drawRoute(chosenroute, pogo, ctx)
+  }
 }

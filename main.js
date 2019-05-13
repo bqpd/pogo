@@ -72,6 +72,7 @@ var goal = new Point(pogo.x, pogo.y);
 // Initialize Mask around Pogo
 var borderPixels = [];
 [mask, borderPixels] = labelGoodRegion(mask, pogo.x, pogo.y, brushRadius, GOOD, BORDER, BAD, borderPixels);
+routeReady = false
 
 // Animate
 window.onload = function() {
@@ -84,51 +85,9 @@ window.onload = function() {
 function mouseMoveCallback(evt) {
 	[mask, borderPixels] = drawGood(canvas, evt, mask, GOOD, BORDER, BAD, borderPixels, brushRadius);
 	goal = getMousePos(canvas, evt);
-
-	/*/ NICK HACK XXX
-	for (let x=0; x<mask.length; x++) {
-		for (let y=0; y<mask[0].length; y++) {
-			if (mask[x][y]==TEST) {
-				mask[x][y]=BORDER;
-			}
-		}
-	}
-	// END NICK HACK */
-	/*while lastReachablePixels.length!==reachablePixels.length) {
-		Clone reachablePixels into lastReachablePixels
-		lastReachablePixels = [];
-		for (let p=0; p<reachablePixels.length; p++) {
-			lastReachablePixels.push(reachablePixels[p].clone());
-		// }
-
-		console.log(getPixelsThatCanReach(borderPixels, goal, mask, GOOD))
-
-		var unreachedPoints = getDisjunctiveUnion(borderPixels, reachablePixels);
-		// For each point that can reach the goal
-		for (let p=0; p<reachablePixels.length; p++) {
-			// Find points that can reach it
-			var pointsThatCanReachIt = getPixelsThatCanReach(unreachedPoints, reachablePixels[p], mask, GOOD);
-
-			// Update branch
-			borderPixels[indexOfPoint(borderPixels,reachablePixels[p])].canBeReachedFrom = pointsThatCanReachIt;
-
-			// Remove newly reached points from unreachedPoints
-			for (let q=0; q<pointsThatCanReachIt.length; q++) {
-				unreachedPoints.splice(indexOfPoint(unreachedPoints, pointsThatCanReachIt[q]), 1);
-			}
-		}
-
-		reachablePixels = getDisjunctiveUnion(borderPixels, unreachedPoints);
-	}*/
-
-	/*/ NICK HACK XXX
-	for (let i=0; i<reachablePixels.length; i++) {
-		mask[reachablePixels[i].x][reachablePixels[i].y] = TEST;
-	}
-	colorCanvas(canvas.getContext('2d'), mask, color);
-	// END NICK HACK */
 }
 canvas.addEventListener('mousedown', function(ev) {
+	routeReady = false
 	mouseMoveCallback(ev);
 	canvas.addEventListener('mousemove', mouseMoveCallback);
 });
@@ -139,39 +98,22 @@ canvas.addEventListener('mouseup', function(evt) {
 
 	clearRoute(borderPixels)
 	clearRoute([goal])
-
-	cost = 1
-	goal.canBeReachedFrom = getPixelsThatCanReach(borderPixels, goal, mask, GOOD, cost);
-
-	lastReachablePixels = goal.canBeReachedFrom;
+	let cost = 0
+	lastReachablePixels = [goal];
 	while (lastReachablePixels.length) {
-		var unique_reachs = 0
-		var new_reachable_pixels = []
 		cost++
+		let unique_reachs = 0,
+		 		new_reachable_pixels = []
 		for (let i=0; i<lastReachablePixels.length; i++) {
 			pixel = lastReachablePixels[i]
 			pixel.canBeReachedFrom = getPixelsThatCanReach(borderPixels, pixel, mask, GOOD, cost);
-			if (pixel.canBeReachedFrom.length > unique_reachs) {
-				lastpixel = pixel
-				unique_reachs = pixel.canBeReachedFrom.length
-			}
-			if (pixel.canBeReachedFrom.length > 0) {
+			if (pixel.canBeReachedFrom.length)
 				new_reachable_pixels = new_reachable_pixels.concat(pixel.canBeReachedFrom)
-			}
 		}
 		lastReachablePixels = new_reachable_pixels
 	}
-
 	clearRoute(borderPixels)
 	clearRoute([goal])
 	findRoute(goal)
-	var maxDist = 0
-	for (let i=0; i<lastpixel.canBeReachedFrom.length; i++) {
-		pixel = lastpixel.canBeReachedFrom[i]
-		if (dist(pixel, lastpixel) > maxDist) {
-			startpixel = pixel
-			maxDist = dist(pixel, lastpixel)
-		}
-	}
-	chosenroute = chooseRoute(startpixel)
+	routeReady = true
 });

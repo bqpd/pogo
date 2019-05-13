@@ -11,20 +11,19 @@ function findRoute(goal, cumulative_cost=0) {
     let pixel = goal.canBeReachedFrom[i]
     let link_cost = 1  // NOTE: could also be a calculation of travel time, etc.
     let cost = cumulative_cost + link_cost
-    // if (pixel.cost < cost) {
-    //   continue
-    // NOTE: remove random via equalities for now
-    // } else if (pixel.cost == cost) {
-    //   for (let i=0; i<pixel.partOfAnOptimalPathTo.length; i++) {
-    //     if (Object.is(goal, pixel.partOfAnOptimalPathTo[i]))
-    //       return // we've already been here with this cost, no need to loop
-    //   }
-    //   pixel.partOfAnOptimalPathTo.push(goal)
-    if (pixel.cost > cost) {
+    if (pixel.cost < cost) {
+      continue
+    } else if (pixel.cost == cost) {
+      for (let i=0; i<pixel.partOfAnOptimalPathTo.length; i++) {
+        if (Object.is(goal, pixel.partOfAnOptimalPathTo[i]))
+          return // we've already been here with this cost, no need to loop
+      }
+      pixel.partOfAnOptimalPathTo.push(goal)
+    } else if (pixel.cost > cost) {
       pixel.cost = cost
       pixel.partOfAnOptimalPathTo = [goal]
-      findRoute(pixel, cost)
     }
+    findRoute(pixel, cost)
 	}
 }
 
@@ -57,7 +56,7 @@ function drawRoute(route, pogo, ctx) {
   ctx.beginPath();
   ctx.fillStyle = "black";
   text = waypoint.cost != Infinity ? waypoint.cost : 0
-  ctx.fillText(text, waypoint.x-4, waypoint.y+4)
+  ctx.fillText(text, waypoint.x-3, waypoint.y+4)
   ctx.fill();
 
   // if it's not the goal yet, keep going!
@@ -67,7 +66,7 @@ function drawRoute(route, pogo, ctx) {
 }
 
 // UNIT TESTS //
-{
+test = () => {
 let pointA = {name:"A", canBeReachedFrom: []},
     pointB = {name:"B", canBeReachedFrom: [pointA]},
     pointC = {name:"C", canBeReachedFrom: [pointB, pointA]},
@@ -107,3 +106,4 @@ for (let i=0; i<10; i++) {
 }
 console.assert(viaD && viaE)  // chances of this failing are 2^-9, right?
 }
+test()
