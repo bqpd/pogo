@@ -8,21 +8,22 @@ function clearRoute(borderPixels) {
 
 function findRoute(goal, cumulative_cost=0) {
 	for (let i=0; i<goal.canBeReachedFrom.length; i++) {
-    var pixel = goal.canBeReachedFrom[i]
-    if (pixel.cost < cumulative_cost) {
+    let pixel = goal.canBeReachedFrom[i]
+    let link_cost = 1  // NOTE: could also be a calculation of travel time, etc.
+    let cost = cumulative_cost + link_cost
+    if (pixel.cost < cost) {
       return
-    } else if (pixel.cost > cumulative_cost) {
-      pixel.cost = cumulative_cost
-      pixel.partOfAnOptimalPathTo = [goal]
-    } else if (pixel.cost == cumulative_cost) {
+    } else if (pixel.cost == cost) {
       for (let i=0; i<pixel.partOfAnOptimalPathTo.length; i++) {
         if (Object.is(goal, pixel.partOfAnOptimalPathTo[i]))
-          return
+          return // we've already been here with this cost, no need to loop
       }
       pixel.partOfAnOptimalPathTo.push(goal)
+    } else if (pixel.cost > cost) {
+      pixel.cost = cost
+      pixel.partOfAnOptimalPathTo = [goal]
     }
-    var link_cost = 1  // NOTE: could also be a calculation of travel time, etc.
-    findRoute(pixel, cumulative_cost + link_cost) // only run this once
+    findRoute(pixel, cost)
 	}
 }
 
@@ -60,7 +61,6 @@ function drawRoute(route, pogo, ctx) {  console.log(goal)
 }
 
 // UNIT TESTS //
-
 var pointA = {name:"A", canBeReachedFrom: []},
     pointB = {name:"B", canBeReachedFrom: [pointA]},
     pointC = {name:"C", canBeReachedFrom: [pointB, pointA]},
@@ -71,7 +71,7 @@ var pointA = {name:"A", canBeReachedFrom: []},
 
 
 // add some cycles!
-//NOTE: for chooseRoute to terminate 'goal' cannot be in any canBeReachedFroms
+// NOTE: for chooseRoute to terminate 'goal' cannot be in any canBeReachedFroms
 pointA.canBeReachedFrom = [pointB, pointC]
 pointC.canBeReachedFrom = pointC.canBeReachedFrom.concat([pointD])
 
@@ -84,6 +84,7 @@ console.assert(pointA.partOfAnOptimalPathTo[0] == pointC)
 console.assert(pointB.partOfAnOptimalPathTo[0] == pointC)
 console.assert(pointB.partOfAnOptimalPathTo[1] == pointF)
 console.assert(pointC.partOfAnOptimalPathTo[0] == pointD)
+console.assert(pointC.partOfAnOptimalPathTo[1] == pointE)
 console.assert(pointD.partOfAnOptimalPathTo[0] == goal)
 console.assert(pointE.partOfAnOptimalPathTo[0] == goal)
 console.assert(pointF.partOfAnOptimalPathTo[0] == pointD)
@@ -97,4 +98,4 @@ for (let i=0; i<10; i++) {
   if (route[1][1][0] == pointD)  viaD = true
   if (route[1][1][0] == pointE)  viaE = true
 }
-console.assert(viaD && viaE)  // chances of this failing are 2^-10, right?
+console.assert(viaD && viaE)  // chances of this failing are 2^-9, right?
