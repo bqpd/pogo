@@ -91,7 +91,35 @@ function mouseMoveCallback(evt) {
 			}
 		}
 	}
-	reachablePixels = getPixelsThatCanReach(borderPixels, goal, mask);
+
+	goal.canBeReachedFrom = getPixelsThatCanReach(borderPixels, goal, mask, GOOD);
+	var lastReachablePixels = goal.canBeReachedFrom;
+	var reachablePixels = [];
+	while (lastReachablePixels.length!==reachablePixels.length) {
+		// Clone lastReachablePixels into reachablePixels
+		reachablePixels = [];
+		for (let p=0; p<lastReachablePixels.length; p++) {
+			reachablePixels.push(lastReachablePixels[p].clone());
+		}
+
+		var unreachedPoints = getDisjunctiveUnion(borderPixels, reachablePixels);
+		// For each point that can reach the goal
+		for (let p=0; p<reachablePixels.length; p++) {
+			// Find points that can reach it
+			var pointsThatCanReachIt = getPixelsThatCanReach(unreachedPoints, reachablePixels[p], mask, GOOD);
+
+			// Update branch
+			borderPixels[indexOfPoint(borderPixels,reachablePixels[p])].canBeReachedFrom = pointsThatCanReachIt;
+
+			// Remove newly reached points from unreachedPoints
+			for (let q=0; q<pointsThatCanReachIt.length; q++) {
+				unreachedPoints.splice(indexOfPoint(unreachedPoints, pointsThatCanReachIt[q]), 1);
+			}
+		}
+
+		reachablePixels = getDisjunctiveUnion(borderPixels, unreachedPoints);
+	}
+
 	for (let i=0; i<reachablePixels.length; i++) {
 		mask[reachablePixels[i].x][reachablePixels[i].y] = TEST;
 	}

@@ -1,14 +1,14 @@
-function getPixelsThatCanReach(points, goal, mask) {
+function getPixelsThatCanReach(points, goal, mask, GOOD) {
 	reachablePixels = [];
 	for (let p=0; p<points.length; p++) {
-		if (canPixelReach(points[p],goal,mask)) {
+		if (canPixelReach(points[p],goal,mask, GOOD)) {
 			reachablePixels.push(points[p]);
 		}
 	}
 	return reachablePixels;
 }
 
-function canPixelReach(point, goal, mask) {
+function canPixelReach(point, goal, mask, GOOD) {
 	// Parameterize Polynomial y = a*x^2 + b*x + c.
 	// In this function, a, b, and c refer to the polynomial coefficients.
 	var x1 = point.x;

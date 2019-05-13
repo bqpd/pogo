@@ -4,6 +4,8 @@ function Point(x,y) {
 	this.canBeReachedFrom = [];
 }
 
-Point.prototype.addPointWithPathTo = function(point) {
-	this.canBeReachedFrom.push(point);
-}
+Point.prototype.clone = function() {
+	var newPt = new Point(this.x, this.y);
+	newPt.canBeReachedFrom = this.canBeReachedFrom.slice();
+	return newPt;
+};
