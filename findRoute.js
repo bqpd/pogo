@@ -28,6 +28,8 @@ function findRoute(goal, cumulative_cost=0) {
 }
 
 function chooseRoute(start) {
+  if (!start.partOfAnOptimalPathTo.length)
+    return [start, []]
   var rand_idx = Math.floor(Math.random()*start.partOfAnOptimalPathTo.length)
   var next_waypoint = start.partOfAnOptimalPathTo[rand_idx]
 
