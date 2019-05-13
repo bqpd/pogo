@@ -59,10 +59,35 @@ function drawRoute(route, pogo, ctx) {
   ctx.fillText(text, waypoint.x-3, waypoint.y+4)
   ctx.fill();
 
+  if (typeof next_waypoints[0] !== 'undefined') {
+    drawPath(waypoint, next_waypoints[0], ctx);
+  }
+
   // if it's not the goal yet, keep going!
   if (next_waypoints.length) {
     drawRoute(next_waypoints, pogo, ctx)
   }
+}
+
+function drawPath(start, end, ctx) {
+  var X = mask.length;
+  var Y = mask[0].length;
+  var imgData = ctx.getImageData(0,0,X,Y);
+
+  var f = canPixelReach(start, end, mask, GOOD);
+  var x1 = start.x;
+  var x2 = end.x;
+  if (x1>x2) {
+    [x1,x2] = [x2,x1];
+  }
+  for (let x=x1; x<x2; x++) {
+    let y = Math.round(f(x));
+    if (y>=0 && y<Y) {
+      imgData = colorPixel(imgData,hex2rgb('#00FF00'),x,y,X,Y);
+    }
+  }
+
+  ctx.putImageData(imgData, 0, 0);
 }
 
 // UNIT TESTS //

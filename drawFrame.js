@@ -10,11 +10,11 @@
  */
 
 function drawFrame(ctx, mask, color, pogo) {
-	colorCanvas(ctx, mask, color, pogo);
-	drawPogo(ctx, pogo);
-
 	if (run) {
 		window.requestAnimationFrame(function(ts) {
+			colorCanvas(ctx, mask, color, pogo);
+			drawPogo(ctx, pogo);
+
 			drawFrame(ctx, mask, color, pogo);
 		});
 	}

@@ -41,7 +41,7 @@ function canPixelReach(point, goal, mask, GOOD) {
 		}
 
 		if (wontIntersectWall) {
-			return true;
+			return f;
 		}
 	}
 }
