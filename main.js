@@ -73,24 +73,8 @@ var borderPixels = [];
 [mask, borderPixels] = labelGoodRegion(mask, pogo.x, pogo.y, brushRadius, GOOD, BORDER, BAD, borderPixels);
 
 // Construct worker to handle task of tree building
-var worker = new Worker('worker.js');
-worker.addEventListener('message', function(e) {
-	goal = e.data[0];
-	borderPixels = e.data[1];
-});
-
-// Animate
-window.onload = function() {
-	window.requestAnimationFrame(function(ts) {
-		drawFrame(canvas.getContext('2d'), mask, color, pogo);
-	});
-}
-
-// Updates the mask when the mouse is moved when the mouse button is down.
-function mouseMoveCallback(evt) {
-	[mask, borderPixels] = drawGood(canvas, evt, mask, GOOD, BORDER, BAD, borderPixels, brushRadius);
-	goal = getMousePos(canvas, evt);
-
+var cache = new Worker('cache.js');
+cache.onmessage = function(e) {
 	/*/ NICK HACK XXX
 	for (let x=0; x<mask.length; x++) {
 		for (let y=0; y<mask[0].length; y++) {
@@ -101,14 +85,42 @@ function mouseMoveCallback(evt) {
 	}
 	// END NICK HACK */
 
-	worker.postMessage([goal, borderPixels, mask]);
-	
+	var sum1 = 0;
+	for (let x=0;x<mask.length;x++){
+		for (let y=0;y<mask[0].length;y++){
+			sum1+=mask[x][y];
+		}
+	}
+	[mask, goal, borderPixels] = e.data;
+	var sum2 = 0;
+	for (let x=0;x<mask.length;x++){
+		for (let y=0;y<mask[0].length;y++){
+			sum2+=mask[x][y];
+		}
+	}
+	console.log(`${sum1},${sum2}`)
+	colorCanvas(canvas.getContext('2d'), mask, color);
+	run = false
 	/*/ NICK HACK XXX
 	for (let i=0; i<goal.canBeReachedFrom.length; i++) {
 		mask[goal.canBeReachedFrom[i].x][goal.canBeReachedFrom[i].y] = TEST;
 	}
 	colorCanvas(canvas.getContext('2d'), mask, color);
 	// END NICK HACK */
+};
+
+// Animate
+window.onload = function() {
+	window.requestAnimationFrame(function(ts) {
+		drawFrame(canvas.getContext('2d'), mask, color, pogo);
+	});
+}
+
+// Updates the mask when the mouse is moved when the mouse button is down.
+function mouseMoveCallback(evt) {
+	//let output = drawGood(canvas, evt, mask, GOOD, BORDER, BAD, borderPixels, brushRadius);
+	goal = getMousePos(canvas, evt);
+	cache.postMessage([borderPixels, goal, mask, GOOD, BORDER, BAD, borderPixels, brushRadius]);
 }
 canvas.addEventListener('mousedown', function(ev) {
 	mouseMoveCallback(ev);

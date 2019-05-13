@@ -1,37 +1,43 @@
-var lastMessage;
-var busy = false;
+importScripts(
+	'colorCanvas.js',
+	'containsPoint.js',
+	'drawFrame.js',
+	'drawGood.js',
+	'drawPogo.js',
+	'findRoute.js',
+	'getPixelsThatCanReach.js',
+	'hex2rgb.js',
+	'Point.js',
+	'sleep.js'
+)
 
-self.addEventListener('message', function(e) {
-	if (busy) {
-		lastMessage = e;
+onmessage = async function(e) {
+	// If cache sent you an empty instruction, tell cache to give you something real.
+	if (e.data===null) {
+		await sleep(5000);
+		self.postMessage(null);
+	// Otherwise, if the instruction is real, 
 	} else {
-		busy = true;
-		doWork(e);
-		busy = false;
-	}
-});
+		// Unpack the message.
+		var borderPixels, goal, mask, GOOD, BORDER, BAD, borderPixels, brushRadius;
+		[borderPixels, goal, mask, GOOD, BORDER, BAD, borderPixels, brushRadius] = e.data;
 
-var doWork = function(e) {
-	var xhr = new XMLHttpRequest();
-	xhr.open("GET", e.data);
-	xhr.onload = function() {
-		// e.data might be contained in xhr.responseText
-		let goal = e.data[0];
-		let borderPixels = e.data[1];
-		let mask = e.data[2];
+		// Update the mask and border pixel list
+		output = labelGoodRegion(mask, goal.x, goal.y, brushRadius, GOOD, BORDER, BAD, borderPixels);
+		[mask, borderPixels] = output;
 
+		// Update border pixels that can reach the goal.
 		goal.canBeReachedFrom = getPixelsThatCanReach(borderPixels, goal, mask);
+		// Do likewise for each of the border pixels.
+		/*
 		for (let p=0; p<borderPixels.length; p++) {
 			borderPixels[p].canBeReachedFrom = getPixelsThatCanReach(borderPixels, borderPixels[p], mask);
 		}
+		*/
 
-		self.postMessage([goal, borderPixels]);
-
-		if(queue.length) {
-			// run the next queued item
-			runAjax(queue.shift());
-		} else {
-			busy = false;
-		}
+		// Return updated goal and border pixels.
+		message = [mask, goal, borderPixels];
+		postMessage(message);
+		//close();
 	}
 };

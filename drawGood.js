@@ -28,11 +28,12 @@ function getMousePos(canvas, evt) {
 
 function labelGoodRegion(mask, xc, yc, radius, GOOD, BORDER, BAD, borderPixels) {
 	var newGood = [];
+
 	// Set square around cursor to be GOOD
 	for (let x=xc-radius; x<xc+radius; x++) {
 		for (let y=yc-radius; y<yc+radius; y++) {
 			if (x>=0 && x<mask.length && y>=0 && y<mask[0].length) {
-				if (pow(x-xc,2) + pow(y-yc,2) <= pow(radius,2)) {
+				if ((x-xc)*(x-xc) + (y-yc)*(y-yc) <= radius*radius) {
 					if (x==0 || x==mask.length-1 || y==0 || y==mask[0].length-1) {
 						mask[x][y] = BORDER;
 						borderPixels.push(new Point(x,y));
