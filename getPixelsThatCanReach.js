@@ -1,7 +1,7 @@
 function getPixelsThatCanReach(points, goal, mask, GOOD) {
 	reachablePixels = [];
 	for (let p=0; p<points.length; p++) {
-		if (canPixelReach(points[p],goal,mask)) {
+		if (canPixelReach(points[p],goal,mask,GOOD)) {
 			reachablePixels.push(points[p]);
 		}
 	}

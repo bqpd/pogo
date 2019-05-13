@@ -38,6 +38,5 @@ onmessage = async function(e) {
 		// Return updated goal and border pixels.
 		message = [mask, goal, borderPixels];
 		postMessage(message);
-		//close();
 	}
 };

@@ -10,7 +10,7 @@
  */
 
 function drawFrame(ctx, mask, color, pogo) {
-	colorCanvas(ctx, mask, color, pogo);
+	colorCanvas(ctx);
 	drawPogo(ctx, pogo);
 
 	if (run) {

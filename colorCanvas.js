@@ -8,7 +8,7 @@
  * @param {String[]}	color 	Array of colors indexed using global constants.
  */
  
-function colorCanvas(ctx, mask, color) {
+function colorCanvas(ctx) {
 	var X = mask.length;
 	var Y = mask[0].length;
 	var imgData = ctx.getImageData(0,0,X,Y);
@@ -16,6 +16,16 @@ function colorCanvas(ctx, mask, color) {
 		for (let y=0; y<Y; y++) {								// For each row
 			imgData = colorPixel(imgData, color[mask[x][y]], x, y, X, Y);
 		}
+	}
+
+	if (!run) {
+		let sum2 = 0;
+		for (let x=0;x<mask.length;x++){
+			for (let y=0;y<mask[0].length;y++){
+				sum2+=mask[x][y];
+			}
+		}
+		console.log(sum2)
 	}
 
 	ctx.putImageData(imgData, 0, 0);

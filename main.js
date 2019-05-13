@@ -75,7 +75,7 @@ var borderPixels = [];
 // Construct worker to handle task of tree building
 var cache = new Worker('cache.js');
 cache.onmessage = function(e) {
-	/*/ NICK HACK XXX
+	// NICK HACK XXX
 	for (let x=0; x<mask.length; x++) {
 		for (let y=0; y<mask[0].length; y++) {
 			if (mask[x][y]==TEST) {
@@ -85,23 +85,9 @@ cache.onmessage = function(e) {
 	}
 	// END NICK HACK */
 
-	var sum1 = 0;
-	for (let x=0;x<mask.length;x++){
-		for (let y=0;y<mask[0].length;y++){
-			sum1+=mask[x][y];
-		}
-	}
 	[mask, goal, borderPixels] = e.data;
-	var sum2 = 0;
-	for (let x=0;x<mask.length;x++){
-		for (let y=0;y<mask[0].length;y++){
-			sum2+=mask[x][y];
-		}
-	}
-	console.log(`${sum1},${sum2}`)
-	colorCanvas(canvas.getContext('2d'), mask, color);
-	run = false
-	/*/ NICK HACK XXX
+
+	// NICK HACK XXX
 	for (let i=0; i<goal.canBeReachedFrom.length; i++) {
 		mask[goal.canBeReachedFrom[i].x][goal.canBeReachedFrom[i].y] = TEST;
 	}
