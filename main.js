@@ -84,6 +84,7 @@ function mouseMoveCallback(evt) {
 	[mask, borderPixels] = drawGood(canvas, evt, mask, GOOD, BORDER, BAD, borderPixels, brushRadius);
 	goal = getMousePos(canvas, evt);
 
+	/*/ NICK HACK XXX
 	for (let x=0; x<mask.length; x++) {
 		for (let y=0; y<mask[0].length; y++) {
 			if (mask[x][y]==TEST) {
@@ -91,15 +92,16 @@ function mouseMoveCallback(evt) {
 			}
 		}
 	}
+	// END NICK HACK */
 
 	goal.canBeReachedFrom = getPixelsThatCanReach(borderPixels, goal, mask, GOOD);
-	var lastReachablePixels = goal.canBeReachedFrom;
-	var reachablePixels = [];
+	var reachablePixels = goal.canBeReachedFrom;
+	var lastReachablePixels = [];
 	while (lastReachablePixels.length!==reachablePixels.length) {
-		// Clone lastReachablePixels into reachablePixels
-		reachablePixels = [];
-		for (let p=0; p<lastReachablePixels.length; p++) {
-			reachablePixels.push(lastReachablePixels[p].clone());
+		// Clone reachablePixels into lastReachablePixels
+		lastReachablePixels = [];
+		for (let p=0; p<reachablePixels.length; p++) {
+			lastReachablePixels.push(reachablePixels[p].clone());
 		}
 
 		var unreachedPoints = getDisjunctiveUnion(borderPixels, reachablePixels);
@@ -120,10 +122,12 @@ function mouseMoveCallback(evt) {
 		reachablePixels = getDisjunctiveUnion(borderPixels, unreachedPoints);
 	}
 
+	/*/ NICK HACK XXX
 	for (let i=0; i<reachablePixels.length; i++) {
 		mask[reachablePixels[i].x][reachablePixels[i].y] = TEST;
 	}
 	colorCanvas(canvas.getContext('2d'), mask, color);
+	// END NICK HACK */
 }
 canvas.addEventListener('mousedown', function(ev) {
 	mouseMoveCallback(ev);
