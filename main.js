@@ -3,6 +3,7 @@ const BAD = 0;
 const GOOD = 1;
 const BORDER = 2;
 const TEST = 3;
+const CLOSE = 4;
 const FPS = 60;
 const DT = 1/FPS;
 const GRAVITY = 98.1;
@@ -22,6 +23,7 @@ color[BAD] = hex2rgb('#4C453F');
 color[GOOD] = hex2rgb('#B0A091');
 color[BORDER] = hex2rgb('#F6E6D7');
 color[TEST] = hex2rgb('#00FF00')
+color[CLOSE] = hex2rgb('#00FFFF')
 brushRadius = 40;
 
 // Define Canvas
@@ -43,14 +45,17 @@ for (let r=0; r<mask.length; r++) {
 var pogo = {
 	// States
 	x: 0.5*cw,
-	y: 50,
-	l: 0,
-	t: 0,
-	tv: 10,
 	vx: 10,
-	vy: 0,
 	ax: 0,
+	y: 50,
+	vy: 0,
 	ay: 0,
+	l: 0,
+	vl: 0,
+	al: 0,
+	t: 0,
+	vt: 0,
+	at: 0,
 	lasthitpixels: [],
 
 	// Properties
