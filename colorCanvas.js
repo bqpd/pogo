@@ -7,7 +7,6 @@
  * @param {Number[][]}	mask	Array of integers whose indeces correspond to locations on the canvas and values to colors.
  * @param {String[]}	color 	Array of colors indexed using global constants.
  */
-
 function colorCanvas(ctx, mask, color) {
 	var X = mask.length;
 	var Y = mask[0].length;
