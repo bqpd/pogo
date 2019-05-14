@@ -10,12 +10,16 @@
  */
 
 function drawFrame(ctx, mask, color, pogo) {
-	colorCanvas(ctx, mask, color, pogo);
-	drawPogo(ctx, pogo);
-
 	if (run) {
 		window.requestAnimationFrame(function(ts) {
-			drawFrame(ctx, mask, color, pogo);
+			//if (typeof imgData_debug === 'undefined') {
+				colorCanvas(ctx, mask, color, pogo);
+				drawPogo(ctx, pogo);
+
+				drawFrame(ctx, mask, color, pogo);
+			// } else {
+			// 	ctx.putImageData(imgData_debug, 0, 0);
+			// }
 		});
 	}
 }

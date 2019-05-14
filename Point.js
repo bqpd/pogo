@@ -9,3 +9,7 @@ Point.prototype.clone = function() {
 	newPt.canBeReachedFrom = this.canBeReachedFrom.slice();
 	return newPt;
 };
+
+Point.prototype.manhattan = function(pt) {
+	return Math.abs(this.x-pt.x) + Math.abs(this.y-pt.y);
+}

@@ -7,7 +7,6 @@
  * @param {Number[][]}	mask	Array of integers whose indeces correspond to locations on the canvas and values to colors.
  * @param {String[]}	color 	Array of colors indexed using global constants.
  */
- 
 function colorCanvas(ctx, mask, color) {
 	var X = mask.length;
 	var Y = mask[0].length;
@@ -16,6 +15,10 @@ function colorCanvas(ctx, mask, color) {
 		for (let y=0; y<Y; y++) {								// For each row
 			imgData = colorPixel(imgData, color[mask[x][y]], x, y, X, Y);
 		}
+	}
+
+	for (let p=0; p<goal.canBeReachedFrom.length; p++) {
+		imgData = colorPixel(imgData, color[CLOSE], goal.canBeReachedFrom[p].x, goal.canBeReachedFrom[p].y, X, Y);
 	}
 
 	ctx.putImageData(imgData, 0, 0);

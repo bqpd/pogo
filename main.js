@@ -3,9 +3,13 @@ const BAD = 0;
 const GOOD = 1;
 const BORDER = 2;
 const TEST = 3;
+const CLOSE = 4;
 const FPS = 60;
 const DT = 1/FPS;
+const GRAVITY = 98.1;
 run = true // set to false to halt animation
+var imgData_debug;
+chosenroute = []
 
 // Convenient Functions
 sqrt = Math.sqrt
@@ -19,6 +23,7 @@ color[BAD] = hex2rgb('#4C453F');
 color[GOOD] = hex2rgb('#B0A091');
 color[BORDER] = hex2rgb('#F6E6D7');
 color[TEST] = hex2rgb('#00FF00')
+color[CLOSE] = hex2rgb('#00FFFF')
 brushRadius = 40;
 
 // Define Canvas
@@ -40,14 +45,17 @@ for (let r=0; r<mask.length; r++) {
 var pogo = {
 	// States
 	x: 0.5*cw,
-	y: 50,
-	l: 0,
-	t: 0,
-	tv: 10,
 	vx: 10,
-	vy: 0,
 	ax: 0,
+	y: 50,
+	vy: 0,
 	ay: 0,
+	l: 0,
+	vl: 0,
+	al: 0,
+	t: 0,
+	vt: 0,
+	at: 0,
 	lasthitpixels: [],
 
 	// Properties
@@ -71,6 +79,7 @@ var goal = new Point(pogo.x, pogo.y);
 // Initialize Mask around Pogo
 var borderPixels = [];
 [mask, borderPixels] = labelGoodRegion(mask, pogo.x, pogo.y, brushRadius, GOOD, BORDER, BAD, borderPixels);
+routeReady = false
 
 // Animate
 window.onload = function() {
@@ -83,53 +92,9 @@ window.onload = function() {
 function mouseMoveCallback(evt) {
 	[mask, borderPixels] = drawGood(canvas, evt, mask, GOOD, BORDER, BAD, borderPixels, brushRadius);
 	goal = getMousePos(canvas, evt);
-
-	/*/ NICK HACK XXX
-	for (let x=0; x<mask.length; x++) {
-		for (let y=0; y<mask[0].length; y++) {
-			if (mask[x][y]==TEST) {
-				mask[x][y]=BORDER;
-			}
-		}
-	}
-	// END NICK HACK */
-
-	goal.canBeReachedFrom = getPixelsThatCanReach(borderPixels, goal, mask, GOOD);
-	var reachablePixels = goal.canBeReachedFrom;
-	var lastReachablePixels = [];
-	while (lastReachablePixels.length!==reachablePixels.length) {
-		// Clone reachablePixels into lastReachablePixels
-		lastReachablePixels = [];
-		for (let p=0; p<reachablePixels.length; p++) {
-			lastReachablePixels.push(reachablePixels[p].clone());
-		}
-
-		var unreachedPoints = getDisjunctiveUnion(borderPixels, reachablePixels);
-		// For each point that can reach the goal
-		for (let p=0; p<reachablePixels.length; p++) {
-			// Find points that can reach it
-			var pointsThatCanReachIt = getPixelsThatCanReach(unreachedPoints, reachablePixels[p], mask, GOOD);
-
-			// Update branch
-			borderPixels[indexOfPoint(borderPixels,reachablePixels[p])].canBeReachedFrom = pointsThatCanReachIt;
-
-			// Remove newly reached points from unreachedPoints
-			for (let q=0; q<pointsThatCanReachIt.length; q++) {
-				unreachedPoints.splice(indexOfPoint(unreachedPoints, pointsThatCanReachIt[q]), 1);
-			}
-		}
-
-		reachablePixels = getDisjunctiveUnion(borderPixels, unreachedPoints);
-	}
-
-	/*/ NICK HACK XXX
-	for (let i=0; i<reachablePixels.length; i++) {
-		mask[reachablePixels[i].x][reachablePixels[i].y] = TEST;
-	}
-	colorCanvas(canvas.getContext('2d'), mask, color);
-	// END NICK HACK */
 }
 canvas.addEventListener('mousedown', function(ev) {
+	routeReady = false
 	mouseMoveCallback(ev);
 	canvas.addEventListener('mousemove', mouseMoveCallback);
 });
@@ -137,4 +102,25 @@ canvas.addEventListener('mousedown', function(ev) {
 // Stops updating the mask once the mouse button is up.
 canvas.addEventListener('mouseup', function(evt) {
 	canvas.removeEventListener('mousemove', mouseMoveCallback);
+
+	clearRoute(borderPixels)
+	clearRoute([goal])
+	let cost = 0
+	lastReachablePixels = [goal];
+	while (lastReachablePixels.length) {
+		cost++
+		let unique_reachs = 0,
+		 		new_reachable_pixels = []
+		for (let i=0; i<lastReachablePixels.length; i++) {
+			pixel = lastReachablePixels[i]
+			pixel.canBeReachedFrom = getPixelsThatCanReach(borderPixels, pixel, mask, GOOD, cost);
+			if (pixel.canBeReachedFrom.length)
+				new_reachable_pixels = new_reachable_pixels.concat(pixel.canBeReachedFrom)
+		}
+		lastReachablePixels = new_reachable_pixels
+	}
+	clearRoute(borderPixels)
+	clearRoute([goal])
+	findRoute(goal)
+	routeReady = true
 });

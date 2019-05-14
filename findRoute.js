@@ -12,7 +12,7 @@ function findRoute(goal, cumulative_cost=0) {
     let link_cost = 1  // NOTE: could also be a calculation of travel time, etc.
     let cost = cumulative_cost + link_cost
     if (pixel.cost < cost) {
-      return
+      continue
     } else if (pixel.cost == cost) {
       for (let i=0; i<pixel.partOfAnOptimalPathTo.length; i++) {
         if (Object.is(goal, pixel.partOfAnOptimalPathTo[i]))
@@ -28,6 +28,8 @@ function findRoute(goal, cumulative_cost=0) {
 }
 
 function chooseRoute(start) {
+  if (!start.partOfAnOptimalPathTo.length)
+    return [start, []]
   var rand_idx = Math.floor(Math.random()*start.partOfAnOptimalPathTo.length)
   var next_waypoint = start.partOfAnOptimalPathTo[rand_idx]
 
@@ -37,22 +39,31 @@ function chooseRoute(start) {
       next_waypoint.partOfAnOptimalPathTo.length) {
     next_waypoints = chooseRoute(next_waypoint)
   } else {
-    next_waypoints = []
+    next_waypoints = [next_waypoint, []]
   }
 
   return [start, next_waypoints]
 }
 
-function drawRoute(route, pogo, ctx) {  console.log(goal)
+function drawRoute(route, pogo, ctx) {
   var [waypoint, next_waypoints] = route
 
   ctx.beginPath();
-  ctx.fillStyle = "blue";
+  ctx.fillStyle = "cyan";
   ctx.ellipse(waypoint.x,
               waypoint.y,
               pogo.r, pogo.r,
               0, 0, 2*Math.PI);
   ctx.fill();
+  ctx.beginPath();
+  ctx.fillStyle = "black";
+  text = waypoint.cost != Infinity ? waypoint.cost : 0
+  ctx.fillText(text, waypoint.x-3, waypoint.y+4)
+  ctx.fill();
+
+  if (typeof next_waypoints[0] !== 'undefined') {
+    drawPath(waypoint, next_waypoints[0], ctx, text);
+  }
 
   // if it's not the goal yet, keep going!
   if (next_waypoints.length) {
@@ -60,8 +71,33 @@ function drawRoute(route, pogo, ctx) {  console.log(goal)
   }
 }
 
+function drawPath(start, end, ctx, text) {
+  //if (text==2) { console.log(start) }
+  var X = mask.length;
+  var Y = mask[0].length;
+  var imgData = ctx.getImageData(0,0,X,Y);
+
+  var f = canPixelReach(start, end, mask, GOOD);
+  var x1 = start.x;
+  var x2 = end.x;
+  if (x1>x2) {
+    [x1,x2] = [x2,x1];
+  }
+  for (let x=x1+1; x<x2; x++) {
+    let y = Math.round(f(x));
+    if (y>=0 && y<Y) {
+      imgData = colorPixel(imgData,hex2rgb('#00FF00'),x,y,X,Y);
+    }
+  }
+
+  ctx.putImageData(imgData, 0, 0);
+
+  //console.log(`${text}: (${start.x},${start.y}) -> (${end.x},${end.y})`)
+}
+
 // UNIT TESTS //
-var pointA = {name:"A", canBeReachedFrom: []},
+test = () => {
+let pointA = {name:"A", canBeReachedFrom: []},
     pointB = {name:"B", canBeReachedFrom: [pointA]},
     pointC = {name:"C", canBeReachedFrom: [pointB, pointA]},
     pointF = {name:"F", canBeReachedFrom: [pointB]},
@@ -88,7 +124,7 @@ console.assert(pointC.partOfAnOptimalPathTo[1] == pointE)
 console.assert(pointD.partOfAnOptimalPathTo[0] == goal)
 console.assert(pointE.partOfAnOptimalPathTo[0] == goal)
 console.assert(pointF.partOfAnOptimalPathTo[0] == pointD)
-console.log(points)
+// console.log(points)
 
 var viaD = false, viaE = false
 for (let i=0; i<10; i++) {
@@ -99,3 +135,5 @@ for (let i=0; i<10; i++) {
   if (route[1][1][0] == pointE)  viaE = true
 }
 console.assert(viaD && viaE)  // chances of this failing are 2^-9, right?
+}
+test()
