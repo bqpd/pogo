@@ -62,7 +62,7 @@ function drawRoute(route, pogo, ctx) {
   ctx.fill();
 
   if (typeof next_waypoints[0] !== 'undefined') {
-    drawPath(waypoint, next_waypoints[0], ctx);
+    drawPath(waypoint, next_waypoints[0], ctx, text);
   }
 
   // if it's not the goal yet, keep going!
@@ -71,7 +71,7 @@ function drawRoute(route, pogo, ctx) {
   }
 }
 
-function drawPath(start, end, ctx) {
+function drawPath(start, end, ctx, text) {
   var X = mask.length;
   var Y = mask[0].length;
   var imgData = ctx.getImageData(0,0,X,Y);
@@ -82,7 +82,7 @@ function drawPath(start, end, ctx) {
   if (x1>x2) {
     [x1,x2] = [x2,x1];
   }
-  for (let x=x1; x<x2; x++) {
+  for (let x=x1+1; x<x2; x++) {
     let y = Math.round(f(x));
     if (y>=0 && y<Y) {
       imgData = colorPixel(imgData,hex2rgb('#00FF00'),x,y,X,Y);
@@ -90,6 +90,8 @@ function drawPath(start, end, ctx) {
   }
 
   ctx.putImageData(imgData, 0, 0);
+
+  //console.log(`${text}: (${start.x},${start.y}) -> (${end.x},${end.y})`)
 }
 
 // UNIT TESTS //

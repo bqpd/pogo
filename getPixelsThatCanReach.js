@@ -22,26 +22,57 @@ function canPixelReach(point, goal, mask, GOOD) {
 		[x1,x2] = [x2,x1];
 		[y1,y2] = [y2,y1];
 	}
-	var m = (y2-y1)/(x2-x1);
-	function b(a) {return m-(x1+x2)*a;}
-	function c(a) {return y1-x1*m+x1*x2*a;}
 
-	// Test a's
-	for (let a=0.01; a<0.5; a+=0.03+Math.log(a+1)*0.05) {
-		function f(x) {return a*x*x+b(a)*x+c(a);}
-
-		// Exclusion Criteria: projectile path intersects with wall
-		var wontIntersectWall = true;
-		for (let x=x1+1; x<x2; x++) {
-			let y = Math.round(f(x));
+	// If point and goal are directly above/below each other
+	if (x1==x2) {
+		let x = x1;
+		if (y1>y2) {
+			[y1,y2] = [y2,y1];
+		}
+		for (let y=y1; y<=y2; y++) {
 			if (mask[x][y]!==GOOD) {
-				wontIntersectWall = false;
-				break;
+				if (!(mask[x][y]==BORDER && (y==y1 || y==y2))) {
+					return false;
+				}
 			}
 		}
+		return function(x) {return y1;};
+	// If point needs parabolic arc
+	} else {
+		var m = (y2-y1)/(x2-x1);
+		function b(a) {return m-(x1+x2)*a;}
+		function c(a) {return y1-x1*m+x1*x2*a;}
 
-		if (wontIntersectWall) {
-			return f;
+		// Test a's
+		for (let a=0.01; a<0.5; a+=0.03+Math.log(a+1)*0.05) {
+			function f(x) {return Math.round(a*x*x+b(a)*x+c(a));}
+
+			// Exclusion Criteria: projectile path intersects with wall
+			var wontIntersectWall = true;
+			var lastY = f(x1);
+			for (let x=x1; x<=x2; x++) {		// Check over x
+				var y = f(x);
+
+				let y1 = lastY;
+				let y2 = y;
+				if (y1>y2) {
+					[y1,y2] = [y2,y1];
+				}
+				for (let y=y1; y<=y2; y++) {
+					if (mask[x][y]!==GOOD) {
+						if (!(mask[x][y]==BORDER && (x==x1 || x==x2))) {
+							wontIntersectWall = false;
+							break;
+						}
+					}
+				}
+				if (!wontIntersectWall) {break;}
+				lastY = y;
+			}
+
+			if (wontIntersectWall) {
+				return f;
+			}
 		}
 	}
 }
