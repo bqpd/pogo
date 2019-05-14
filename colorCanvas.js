@@ -18,6 +18,10 @@ function colorCanvas(ctx, mask, color) {
 		}
 	}
 
+	for (let p=0; p<goal.canBeReachedFrom.length; p++) {
+		imgData = colorPixel(imgData, color[TEST], goal.canBeReachedFrom[p].x, goal.canBeReachedFrom[p].y, X, Y);
+	}
+
 	ctx.putImageData(imgData, 0, 0);
 }
 

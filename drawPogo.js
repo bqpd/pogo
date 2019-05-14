@@ -83,7 +83,7 @@ function drawPogo(ctx, pogo) {
 
   var [Fx, Fy] = getForces(pogo, maybeCollisions)
   new_ax = Fx/pogo.m
-  new_ay = Fy/pogo.m + 98.1
+  new_ay = Fy/pogo.m + GRAVITY
   // trapezoidal integration of velocity
   pogo.vx += (new_ax + pogo.ax)*DT/2
   pogo.vy += (new_ay + pogo.ay)*DT/2

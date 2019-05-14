@@ -72,6 +72,7 @@ function drawRoute(route, pogo, ctx) {
 }
 
 function drawPath(start, end, ctx, text) {
+  //if (text==2) { console.log(start) }
   var X = mask.length;
   var Y = mask[0].length;
   var imgData = ctx.getImageData(0,0,X,Y);
