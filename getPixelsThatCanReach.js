@@ -86,10 +86,17 @@ function canPixelReach(point, goal, mask, GOOD) {
 					[y1,y2] = [y2,y1];
 				}
 				for (let y=y1; y<=y2; y++) {									// For each y from the last x to this one
-					if (mask[x][y]!==GOOD) {									// If the point (x,y) is not traversible,
-						if (!(mask[x][y]==BORDER && (manhattan(x,y,x1,y1)<7 || manhattan(x,y,x2,y2)<7))) {		// (the point is allowed to be a border if its one of the waypoints)
-							wontIntersectWall = false;							// then the trajectory does intersect with a wall
+					if (manhattan(x,y,x1,y1)>1.5*pogo.r && manhattan(x,y,x2,y2)>1.5*pogo.r) {	// If I'm far from my start/end pt
+						if (!hasClearance(x,y,mask,pogo.r,GOOD)) {
+							wontIntersectWall = false;
 							break;
+						}
+					} else {
+						if (mask[x][y]!==GOOD) {									// If the point (x,y) is not traversible,
+							if (!(mask[x][y]==BORDER && (manhattan(x,y,x1,y1)<7 || manhattan(x,y,x2,y2)<7))) {		// (the point is allowed to be a border if its one of the waypoints)
+								wontIntersectWall = false;							// then the trajectory does intersect with a wall
+								break;
+							}
 						}
 					}
 				}
@@ -132,9 +139,7 @@ function canPixelReach(point, goal, mask, GOOD) {
 	}
 }
 
-function hasClearance(point, mask, radius, GOOD) {
-	var xc = point.x;
-	var yc = point.y;
+function hasClearance(xc, yc, mask, radius, GOOD) {
 	for (let x=xc-radius; x<xc+radius; x++) {
 		for (let y=yc-radius; y<yc+radius; y++) {
 			if (x<0 || x>=mask.length || y<0 || y>mask[0].length || mask[x][y]!==GOOD) {
