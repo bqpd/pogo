@@ -87,7 +87,7 @@ function canPixelReach(point, goal, mask, GOOD) {
 				}
 				for (let y=y1; y<=y2; y++) {									// For each y from the last x to this one
 					if (mask[x][y]!==GOOD) {									// If the point (x,y) is not traversible,
-						if (!(mask[x][y]==BORDER && (x==x1 || x==x2))) {		// (the point is allowed to be a border if its one of the waypoints)
+						if (!(mask[x][y]==BORDER && (manhattan(x,y,x1,y1)<7 || manhattan(x,y,x2,y2)<7))) {		// (the point is allowed to be a border if its one of the waypoints)
 							wontIntersectWall = false;							// then the trajectory does intersect with a wall
 							break;
 						}
@@ -105,6 +105,46 @@ function canPixelReach(point, goal, mask, GOOD) {
 				return f;
 			}
 		}
+
+		/*/ NICK HACK XXX
+		console.log(`${point.x},${point.y}`)
+		console.log(`${goal.x},${goal.y}`)
+		console.log('~')
+
+		var X = mask.length;
+		var Y = mask[0].length;
+		var imgData = ctx.getImageData(0,0,X,Y);
+
+		var a = 0.04;
+		function f(x) {return Math.round(a*x*x+b(a)*x+c(a));}
+		for (let x=x1; x<=x2; x++) {
+			imgData = colorPixel(imgData, color[TEST], x, f(x), X, Y);
+		}
+
+		ctx.putImageData(imgData, 0, 0);
+		imgData_debug = imgData;
+
+		run = false
+		throw 'stop'
+		// END NICK HACK */
+
 		return false;
 	}
+}
+
+function hasClearance(point, mask, radius, GOOD) {
+	var xc = point.x;
+	var yc = point.y;
+	for (let x=xc-radius; x<xc+radius; x++) {
+		for (let y=yc-radius; y<yc+radius; y++) {
+			if (x<0 || x>=mask.length || y<0 || y>mask[0].length || mask[x][y]!==GOOD) {
+				return false;
+			}
+		}
+	}
+	return true;
+}
+
+function manhattan(x1,y1,x2,y2) {
+	return Math.abs(x1-x2)+Math.abs(y1-y2);
 }

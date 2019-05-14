@@ -7,6 +7,7 @@ const FPS = 60;
 const DT = 1/FPS;
 const GRAVITY = 98.1;
 run = true // set to false to halt animation
+var imgData_debug;
 chosenroute = []
 
 // Convenient Functions
