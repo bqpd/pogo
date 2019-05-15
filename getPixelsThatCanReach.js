@@ -13,15 +13,17 @@
  */
 function getPixelsThatCanReach(points, goal, mask, GOOD, cost) {
 	reachablePixels = [];										// Initialize returned array of points
+	bpIndices = [];
 	for (let p=0; p<points.length; p++) {						// For each point in given array of points
 		if (points[p].cost > cost) {
 			if (canPixelReach(points[p], goal, mask, GOOD)) {	// If that point can reach the goal in one hop.
 				points[p].cost = cost; 
 				reachablePixels.push(points[p]);				// Add that point to the returned list.
+				bpIndices.push(p);
 			}
 		}
 	}
-	return reachablePixels;
+	return [reachablePixels,bpIndices];
 }
 
 function canPixelReach(point, goal, mask, GOOD) {
