@@ -107,18 +107,25 @@ canvas.addEventListener('mouseup', function(evt) {
 	clearRoute([goal])
 	let cost = 0
 	lastReachablePixels = [goal];
+	var unreachedPixels = borderPixels.slice();
+	var startTime = new Date().getTime();
 	while (lastReachablePixels.length) {
 		cost++
-		let unique_reachs = 0,
-		 		new_reachable_pixels = []
+		let new_reachable_pixels = []
 		for (let i=0; i<lastReachablePixels.length; i++) {
 			pixel = lastReachablePixels[i]
-			pixel.canBeReachedFrom = getPixelsThatCanReach(borderPixels, pixel, mask, GOOD, cost);
+			let gptcrOutput = getPixelsThatCanReach(unreachedPixels, pixel, mask, GOOD, cost);
+			pixel.canBeReachedFrom = gptcrOutput[0];
+			var upIndices = gptcrOutput[1];
+			for (let upii=upIndices.length-1; upii>=0; upii--) {
+				unreachedPixels.splice(upIndices[upii], 1);
+			}
 			if (pixel.canBeReachedFrom.length)
 				new_reachable_pixels = new_reachable_pixels.concat(pixel.canBeReachedFrom)
 		}
 		lastReachablePixels = new_reachable_pixels
 	}
+	console.log(new Date().getTime()-startTime)
 	clearRoute(borderPixels)
 	clearRoute([goal])
 	findRoute(goal)
