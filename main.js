@@ -113,7 +113,7 @@ canvas.addEventListener('mouseup', function(evt) {
 		cost++
 		let new_reachable_pixels = []
 		for (let i=0; i<lastReachablePixels.length; i++) {
-			pixel = lastReachablePixels[i]
+			let pixel = lastReachablePixels[i]
 			let gptcrOutput = getPixelsThatCanReach(unreachedPixels, pixel, mask, GOOD, cost);
 			pixel.canBeReachedFrom = gptcrOutput[0];
 			var upIndices = gptcrOutput[1];
