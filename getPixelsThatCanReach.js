@@ -78,53 +78,20 @@ function canPixelReach(point, goal, mask, GOOD) {
 
 			// Exclusion Criteria: projectile path intersects with wall
 			var wontIntersectWall = true;
-			var xl = x1;
-			var yl = f(xl);														// The y value of the last x 
+			var lastY = f(x1);													// The y value of the last x 
 			for (let x=x1; x<=x2; x++) {										// For all x from start point to endpoint
 				var y = f(x);													// Compute corresponding y along ballistic trajectory
 
-				let y1 = yl;													// Rename and ensure y2>y1
+				let y1 = lastY;													// Rename and ensure y2>y1
 				let y2 = y;														// This is to make sure that, even if the slope of the trajectory is large here,
 				if (y1>y2) {													// we will still check entire path for non-traversible regions.
 					[y1,y2] = [y2,y1];
 				}
 				for (let y=y1; y<=y2; y++) {									// For each y from the last x to this one
-					if (Math.abs(x-x1)>1.5*pogo.r && Math.abs(y-y1)>1.5*pogo.r && Math.abs(x-x2)>1.5*pogo.r && Math.abs(y-y2)>1.5*pogo.r) {	// If I'm far from my start/end pt
-						if (x>xl) {
-							for (let yr=y-pogo.r; yr<=y+pogo.r; yr++) {
-								if (mask[x+pogo.r][yr]!==GOOD) {
-									wontIntersectWall = false;
-									break;
-								}
-							}
-							if (!wontIntersectWall) {break;}
-						}
-						if (x<xl) {
-							for (let yr=y-pogo.r; yr<=y+pogo.r; yr++) {
-								if (mask[x-pogo.r][yr]!==GOOD) {
-									wontIntersectWall = false;
-									break;
-								}
-							}
-							if (!wontIntersectWall) {break;}
-						}
-						if (y>yl) {
-							for (let xr=x-pogo.r; xr<=x+pogo.r; xr++) {
-								if (mask[xr][y+pogo.r]!==GOOD) {
-									wontIntersectWall = false;
-									break;
-								}
-							}
-							if (!wontIntersectWall) {break;}
-						}
-						if (y<yl) {
-							for (let xr=x-pogo.r; xr<=x+pogo.r; xr++) {
-								if (mask[xr][y-pogo.r]!==GOOD) {
-									wontIntersectWall = false;
-									break;
-								}
-							}
-							if (!wontIntersectWall) {break;}
+					if (manhattan(x,y,x1,y1)>1.5*pogo.r && manhattan(x,y,x2,y2)>1.5*pogo.r) {	// If I'm far from my start/end pt
+						if (!hasClearance(x,y,mask,pogo.r,GOOD)) {
+							wontIntersectWall = false;
+							break;
 						}
 					} else {
 						if (mask[x][y]!==GOOD) {									// If the point (x,y) is not traversible,
@@ -134,10 +101,9 @@ function canPixelReach(point, goal, mask, GOOD) {
 							}
 						}
 					}
-					yl = y;
 				}
 				if (!wontIntersectWall) {break;}
-				xl = x;
+				lastY = y;
 			}
 
 			// Exclusion Criteria: path requires too much energy
