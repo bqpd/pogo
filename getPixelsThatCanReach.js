@@ -68,35 +68,37 @@ function canPixelReach(point, goal, mask, GOOD) {
 
 	// If point needs parabolic arc
 	} else {
-		var m = (y2-y1)/(x2-x1);												// Helper variable to make eqns easier
-		function b(a) {return m-(x1+x2)*a;}										// The quadratic coefficient on x^1
-		function c(a) {return y1-x1*m+x1*x2*a;}									// The quadratic coefficient on x^0
+		var m = (y2-y1)/(x2-x1);															// Helper variable to make eqns easier
+		function b(a) {return m-(x1+x2)*a;}													// The quadratic coefficient on x^1
+		function c(a) {return y1-x1*m+x1*x2*a;}												// The quadratic coefficient on x^0
 
 		// Looking for valid a
-		for (let a=0.01; a<0.7; a+=0.03+Math.log(a+1)*0.05) {					// The quadratic coefficient on x^2. Increase starting a to outlaw paths that are too shallow.
-			function f(x) {return Math.round(a*x*x+b(a)*x+c(a));}				// y=ax^2+bx+x
+		for (let a=0.01; a<0.7; a+=0.03+Math.log(a+1)*0.05) {								// The quadratic coefficient on x^2. Increase starting a to outlaw paths that are too shallow.
+			function f(x) {return Math.round(a*x*x+b(a)*x+c(a));}							// y=ax^2+bx+x
 
 			// Exclusion Criteria: projectile path intersects with wall
 			var wontIntersectWall = true;
-			var lastY = f(x1);													// The y value of the last x 
-			for (let x=x1; x<=x2; x++) {										// For all x from start point to endpoint
-				var y = f(x);													// Compute corresponding y along ballistic trajectory
+			var lastY = f(x1);																// The y value of the last x 
+			for (let x=x1; x<=x2; x++) {													// For all x from start point to endpoint
+				var y = f(x);																// Compute corresponding y along ballistic trajectory
 
-				let y1 = lastY;													// Rename and ensure y2>y1
-				let y2 = y;														// This is to make sure that, even if the slope of the trajectory is large here,
-				if (y1>y2) {													// we will still check entire path for non-traversible regions.
+				let y1 = lastY;																// Rename and ensure y2>y1
+				let y2 = y;																	// This is to make sure that, even if the slope of the trajectory is large here,
+				if (y1>y2) {																// we will still check entire path for non-traversible regions.
 					[y1,y2] = [y2,y1];
 				}
-				for (let y=y1; y<=y2; y++) {									// For each y from the last x to this one
-					if (manhattan(x,y,x1,y1)>1.5*pogo.r && manhattan(x,y,x2,y2)>1.5*pogo.r) {	// If I'm far from my start/end pt
+				for (let y=y1; y<=y2; y++) {												// For each y from the last x to this one
+					if (Math.abs(x-point.x)>1.5*pogo.r && Math.abs(y-point.y)>1.5*pogo.r
+					 && Math.abs(x-goal.x)>1.5*pogo.r && Math.abs(y-goal.y)>1.5*pogo.r) {	// If I'm far from my start/end pt
 						if (!hasClearance(x,y,mask,pogo.r,GOOD)) {
 							wontIntersectWall = false;
 							break;
 						}
 					} else {
-						if (mask[x][y]!==GOOD) {									// If the point (x,y) is not traversible,
-							if (!(mask[x][y]==BORDER && (manhattan(x,y,x1,y1)<7 || manhattan(x,y,x2,y2)<7))) {		// (the point is allowed to be a border if its one of the waypoints)
-								wontIntersectWall = false;							// then the trajectory does intersect with a wall
+						if (mask[x][y]!==GOOD) {											// If the point (x,y) is not traversible,
+							if (!(mask[x][y]==BORDER && (manhattan(x,y,x1,y1)<7
+							 || manhattan(x,y,x2,y2)<7))) {									// (the point is allowed to be a border if its one of the waypoints)
+								wontIntersectWall = false;									// then the trajectory does intersect with a wall
 								break;
 							}
 						}
