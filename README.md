@@ -33,3 +33,27 @@ To determine whether or not one point is reachable from another, Pogo uses the k
 Thus, to determine whether one point is reachable by another, Pogo just needs to find a connecting parabola that (a) does not require too much energy and (b) does not intersect another border point. If one such parabola can be found, the points are considered connectable. These exclusion criteria are illustrated below.
 
 ![Exclusion criteria](images/exclusions.png)
+
+The waypoint feasibility algorithm is as follows:
+```
+1. Calculate minimum a based on minimum amount of energy necessary needed to get to Point B.
+2. If Point A is directly below Point B:
+	1. If it would require too much energy to jump to Point B:
+		1. Return false.
+	2. For each point between A and B:
+		1. If the point is not traversible (e.g. if it is a border point):
+			1. Return false.
+3. Else if Point A is directly above Point B:
+	1. For each point between A and B:
+		1. If the point is not traversible (e.g. if it is a border point):
+			1. Return false.
+4. Else (i.e. the path is parabolic):
+	1. For each a between the minimum (based on geometry) and maximum (based on energy):
+		1. Compute b and c as set by Point A, Point B, and a.
+		2. For each point along the trajectory y=ax^2+bx+c between Points A and B:
+			1. If the point is not traversible (e.g. if it is a border point):
+				1. Try next a.
+		3. If I made it through the whole trajectory:
+			1. Return true.
+```
+where `Point A` is the start point and `Point B` is the end point.
