@@ -32,4 +32,4 @@ IMAGE WILL GO HERE
 
 Thus, to determine whether one point is reachable by another, Pogo just needs to find a connecting parabola that (a) does not require too much energy and (b) does not intersect another border point. If one such parabola can be found, the points are considered connectable. These exclusion criteria are illustrated below.
 
-IMAGE WILL GO HERE
+![Exclusion criteria](images/exclusions.png)
