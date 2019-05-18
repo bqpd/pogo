@@ -11,6 +11,7 @@
  * @param {number}    	cost 	?
  * @returns {Object[]}	Subarray of points that can reach goal.
  */
+ 
 function getPixelsThatCanReach(points, goal, mask, GOOD, cost) {
 	reachablePixels = [];										// Initialize returned array of points
 	bpIndices = [];

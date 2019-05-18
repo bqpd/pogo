@@ -55,5 +55,25 @@ The waypoint feasibility algorithm is as follows:
 				1. Try next a.
 		3. If I made it through the whole trajectory:
 			1. Return true.
+	2. Was unable to find a path. Return false.
 ```
 where `Point A` is the start point and `Point B` is the end point.
+
+## Dynamics
+TODO Ned
+
+## File Descriptions
+| File Name | Description |
+| --------- | ----------- |
+| colorCanvas.js | Draws the base colors on the canvas. |
+| containsPoint.js | Determines whether an array contains a specific point. |
+| drawFrame.js | Callback used by requestAnimationFrame. |
+| drawPogo.js | Draws the Pogo character on the canvas. |
+| findRoute.js | Performs path planning through the borderPixel tree. |
+| getMousePos.js | The position of the cursor. |
+| getPixelsThatCanReach.js | Finds all the points capable of reaching a specified point. |
+| hex2rgb.js | Converts hexadecimal color string to RGB array. |
+| index.html | HTML home page of the Pogo game. Assembles JavaScript files. |
+| labelGoodRegion.js | Updates the mask when the mouse is clicked. |
+| main.js | Parent JavaScript code that declares constants and listeners and initializes global variables. |
+| Point.js | Class for border points. |

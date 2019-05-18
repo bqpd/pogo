@@ -90,8 +90,8 @@ window.onload = function() {
 
 // Updates the mask when the mouse is moved when the mouse button is down.
 function mouseMoveCallback(evt) {
-	[mask, borderPixels] = drawGood(canvas, evt, mask, GOOD, BORDER, BAD, borderPixels, brushRadius);
 	goal = getMousePos(canvas, evt);
+	[mask, borderPixels] = labelGoodRegion(mask, goal.x, goal.y, brushRadius, GOOD, BORDER, BAD, borderPixels);
 }
 canvas.addEventListener('mousedown', function(ev) {
 	routeReady = false

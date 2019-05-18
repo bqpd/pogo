@@ -1,31 +1,21 @@
 /**
  * Updates the mask when the mouse is clicked.
  *
- * Gets the current position of the mouse and updates a square of values in the mask around that point to indicate that the
- * region is "good."
+ * Gets the current position of the mouse and updates a circle of values in the mask around that point to indicate that the
+ * region is "good" and traversible.
  *
- * @param {object}		canvas			The canvas on which to draw.
- * @param {object}		evt				The event from which to get the mouse position.
- * @param {Number[][]}	mask			Array of integers whose indeces correspond to locations on the canvas and values to colors.
- * @param {number}		GOOD 			The index of the color array with the color of the "good" region.
- * @param {number}		BORDER 			The index of the color array with the color of the border between "good" and "bad" regions.
- * @param {number}		BAD 			The index of the color array with the color of the "bad" region.
- * @param {Object[]}	borderPixels	The array of pixels along the border.
- * @param {number}		brushRadius 	The radius of the brush with which the user paints the mask.
+ * @param {Number[][]}		mask			Array of integers whose indeces correspond to locations on the canvas and values to colors.
+ * @param {number}			xc 				The x-coordinate of the center of the brush on the canvas.
+ * @param {number}			yc 				The y-coordinate of the center of the brush on the canvas.
+ * @param {number}			radius 			The radius of the brush with which the user paints the mask.
+ * @param {number}			GOOD 			The index of the color array with the color of the "good" region.
+ * @param {number}			BORDER 			The index of the color array with the color of the border between "good" and "bad" regions.
+ * @param {number}			BAD 			The index of the color array with the color of the "bad" region.
+ * @param {Object[]}		borderPixels	The array of pixels along the border.
  * @returns {Number[][]}	The updated mask.
  * @returns {Object[]}		The updated border pixel array.
  */
-
-function drawGood(canvas, evt, mask, GOOD, BORDER, BAD, borderPixels, brushRadius) {
-	var mousePos = getMousePos(canvas, evt);
-	return labelGoodRegion(mask, mousePos.x, mousePos.y, brushRadius, GOOD, BORDER, BAD, borderPixels);
-}
-
-function getMousePos(canvas, evt) {
-	var rect = canvas.getBoundingClientRect();
-	return new Point(evt.clientX - rect.left, evt.clientY - rect.top);
-}
-
+ 
 function labelGoodRegion(mask, xc, yc, radius, GOOD, BORDER, BAD, borderPixels) {
 	var newGood = [];
 	// Set square around cursor to be GOOD
