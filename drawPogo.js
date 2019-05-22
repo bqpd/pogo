@@ -61,16 +61,22 @@ function drawPogo(ctx, pogo) {
   pogo.x += pogo.vx*DT + 0.5*pogo.ax*pow(DT, 2)
   pogo.y += pogo.vy*DT + 0.5*pogo.ay*pow(DT, 2)
 
+
+  if (dist(pogo, goal) <= pogo.r + pogo.r_wheel) {
+    contactpoint = {cost: Infinity}
+  }
+
   var [withinReach,
        _, _] = getPossibleCollisions(pogo, pogo.r + pogo.l0max, borderPixels)
 
   var [maybeCollisions,
        Dx, Dy] = getPossibleCollisions(pogo, pogo.r + pogo.l0min, withinReach)
 
-  // CONTROLLER //
+  // DP CONTROLLER //
   var foundpush = false
-  var minangledist = Math.PI/24
+  // if close but not too close, use this controller
   if (withinReach.length && !maybeCollisions.length) {
+    var minangledist = Math.PI/24
     for (let i=0; i<withinReach.length; i++) {
       border = withinReach[i]
       if (border.partOfAnOptimalPathTo.length) {
@@ -87,15 +93,16 @@ function drawPogo(ctx, pogo) {
             foundpush = true
             contactpoint = border
             pogo.t = border.th
-            // var l0delta = Math.min(dist(pogo, border), pogo.l0max) - pogo.l0
-            // pogo.l0 += Math.max(-1, Math.min(l0delta, 1))
-            pogo.l = dist(pogo, border)
-            pogo.l0 = Math.abs(Fx_d/(pogo.k*Math.sin(Math.PI+pogo.t))
-                               + Fy_d/(pogo.k*Math.cos(Math.PI+pogo.t)))/2
-            pogo.l0 += pogo.l
-            pogo.l0 = Math.min(pogo.l0max, Math.max(pogo.l0min, pogo.l0))
-            Fx = (pogo.l0-pogo.l)*pogo.k*Math.sin(Math.PI+pogo.t)
-            Fy = (pogo.l0-pogo.l)*pogo.k*Math.cos(Math.PI+pogo.t)
+            collisionAngleSpread = Math.atan(pogo.l0, pogo.r)/12
+            for (let i=0; i<withinReach.length; i++) {
+              border = withinReach[i]
+              if (Math.abs(border.th-pogo.t) < collisionAngleSpread) {
+                pogo.l = Math.max(0, Math.min(pogo.l, dist(pogo, border) - pogo.r));
+              }
+            }
+            var l0_d = norm(Fx_d, Fy_d)/pogo.k + pogo.l
+            l0_d = Math.min(pogo.l0max, Math.max(pogo.l0min, l0_d))
+            pogo.l0 += Math.max(-2, Math.min(l0_d-pogo.l0, 2))
           }
         }
       }
@@ -103,34 +110,17 @@ function drawPogo(ctx, pogo) {
   }
 
   if (!foundpush) {
-    if (maybeCollisions.length) {
+    if (maybeCollisions.length) { // if too close, use this controller
         pogo.t = Math.atan2(-Dx, -Dy)
         pogo.l0 = pogo.l0min
         contactpoint = {cost: Infinity}
-        var [Fx, Fy] = getForces(pogo, withinReach)
-    } else {  // align with ballistic trajectory
+    } else {  // if far, use this controller
       pogo.t -= 0.1*(pogo.t - Math.atan2(pogo.vx, pogo.vy))
       pogo.l0 -= 0.1*(pogo.l0 - pogo.l0min)
-      var [Fx, Fy] = [0, 0]
     }
-  } else {
-    var nextpoint = contactpoint.partOfAnOptimalPathTo[0]
-    var [vx_d, vy_d] = contactpoint.toReach[nextpoint.x][nextpoint.y]
-    ctx.beginPath();
-    ctx.strokeStyle = "cyan"
-    ctx.translate(pogo.x, pogo.y);
-    ctx.lineTo(0, 0);
-    ctx.lineTo(vx_d, vy_d);
-    ctx.translate(-pogo.x, -pogo.y);
-    ctx.stroke()
-    ctx.beginPath();
-    ctx.strokeStyle = "red"
-    ctx.translate(pogo.x, pogo.y);
-    ctx.lineTo(0, 0);
-    ctx.lineTo(pogo.x-contactpoint.x, pogo.y-contactpoint.y);
-    ctx.translate(-pogo.x, -pogo.y);
-    ctx.stroke()
   }
+
+  var [Fx, Fy] = getForces(pogo, withinReach)
 
   new_ax = Fx/pogo.m
   new_ay = Fy/pogo.m + GRAVITY
@@ -140,21 +130,12 @@ function drawPogo(ctx, pogo) {
   pogo.ax = new_ax
   pogo.ay = new_ay
 
-  if (dist(pogo, goal) <= 2*pogo.r) {
-    contactpoint = {cost: Infinity}
-  }
-
   // RESTART POGO? //
   if (pogo.x < 0 || pogo.x > canvas.width ||
       pogo.y < 0 || pogo.y > canvas.height) {
     pogo.vx = pogo.vy = 0;
     [pogo.x, pogo.y] = [pogo.restart_x, pogo.restart_y];
     contactpoint = {}
-  }
-
-  if (routeReady && contactpoint.partOfAnOptimalPathTo != undefined) {
-    chosenroute = chooseRoute(contactpoint)
-    drawRoute(chosenroute, pogo, ctx)
   }
 
   // DRAW POGO //
@@ -204,4 +185,9 @@ function drawPogo(ctx, pogo) {
               -Math.atan2(pogo.ax, pogo.ay),
               0, 2*Math.PI);
   ctx.fill();
+
+  if (routeReady && contactpoint.partOfAnOptimalPathTo != undefined) {
+    chosenroute = chooseRoute(contactpoint)
+    drawRoute(chosenroute, pogo, ctx)
+  }
 }

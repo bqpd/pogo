@@ -48,20 +48,15 @@ function drawRoute(route, pogo, ctx) {
   var [waypoint, next_waypoints] = route
 
   ctx.beginPath();
-  ctx.fillStyle = "cyan";
+  ctx.fillStyle = "#00FF00"
   ctx.ellipse(waypoint.x,
               waypoint.y,
-              pogo.r, pogo.r,
+              pogo.r_wheel, pogo.r_wheel,
               0, 0, 2*Math.PI);
-  ctx.fill();
-  ctx.beginPath();
-  ctx.fillStyle = "black";
-  text = waypoint.cost != Infinity ? waypoint.cost : 0
-  ctx.fillText(text, waypoint.x-3, waypoint.y+4)
   ctx.fill();
 
   if (typeof next_waypoints[0] !== 'undefined') {
-    drawPath(waypoint, next_waypoints[0], ctx, text);
+    drawPath(waypoint, next_waypoints[0], ctx);
   }
 
   // if it's not the goal yet, keep going!
@@ -70,8 +65,7 @@ function drawRoute(route, pogo, ctx) {
   }
 }
 
-function drawPath(start, end, ctx, text) {
-  //if (text==2) { console.log(start) }
+function drawPath(start, end, ctx) {
   var X = mask.length;
   var Y = mask[0].length;
   var imgData = ctx.getImageData(0,0,X,Y);
@@ -90,8 +84,6 @@ function drawPath(start, end, ctx, text) {
   }
 
   ctx.putImageData(imgData, 0, 0);
-
-  //console.log(`${text}: (${start.x},${start.y}) -> (${end.x},${end.y})`)
 }
 
 // UNIT TESTS //

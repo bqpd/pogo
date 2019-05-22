@@ -1,14 +1,27 @@
 # pogo
 an underactuated game
 
-![it's pronounced "geoff"](images/readme.gif)
+![live-drawn example](images/pogo11.gif)
 
-![](images/pogo7.gif)
 
-![](images/pogo8.gif)
+## development snapshots
+![bouncing w/o trajectory](images/readme.gif)
+
+![bouncing w/trajectory](images/pogo7.gif)
+
+![controlled w/cyan waypoints](images/pogo10.gif)
 
 ## Defining the Environment
-Our simulation opens on Pogo, a character on a pogo stick bouncing around a world you create. Click and drag through the screen to define an area through which Pogo can travel. When you release the mouse, that point will be defined as the goal to which Pogo must travel. Once Pogo has this goal, it performs trajectory optimization to determine the optimal path from it's current position to the goal. The path is displayed using green dots between cyan waypoints along the walls. Each waypoint is labelled with the number of remaining hops to the goal.
+Our simulation opens on Pogo, a character on a pogo stick bouncing around a world you create. Click and drag through the screen to define an area through which Pogo can travel. When you release the mouse, that point will be defined as the goal to which Pogo must travel. Once Pogo has this goal, it performs trajectory optimization to determine the optimal path from it's current position to the goal. The path is displayed using green dots between cyan waypoints along the walls. Each waypoint is labeled with the number of remaining hops to the goal.
+
+## Dynamics
+Specifying stable and sensible contact forces at a constant frame rate
+(that is, using explicit numerical integration) proved more of a challenge
+than expected, even for such a soft system. Velocity Verlet integration
+was used to slightly increase fidelity and reduce some of the energy gain
+created by springs slipping through walls. Dynamics of the spring were
+prototyped with a controller which angled the spring at the distance-weighted average of all walls within reach; dynamics of the head created a fictitious
+spring to every walls within the head's radius, creating the same net effect.
 
 ## Trajectory Optimization
 On every `mouseup` event, the cursor's position is recorded as the goal position for Pogo to reach. Once the goal is determined, Pogo investigates every point along the border between the light and dark regions in the environment to determine from which border points Pogo can reach the goal in one hop. All one-hop points are stored in an array of reachable border points. For each of these newly reachable points, Pogo repeats the investigation with every remaining "unreached" point. Of these unreached points, those that can reach any of the points that can reach the goal are added to the reachable array. The process repeats until the array of reachable points stabilizes. All remaining points are considered unreachable. The complete algorithms is as follows:
@@ -63,8 +76,37 @@ The waypoint feasibility algorithm is as follows:
 ```
 where `Point A` is the start point and `Point B` is the end point.
 
-## Dynamics
-TODO Ned
+## Trajectory-Optimizing Controller
+
+The trajectory optimizations made several simplifying assumptions about the
+physics of the simulation, so the first step towards using them in a controller
+was to make those assumptions closer to the truth by removing the spring
+and giving the head the impulse necessary to achieve the desired velocity
+whenever it made contact with the ground:
+
+![Magic bouncing ball](images/pogo8.gif)
+
+Sadly, carrying these assumptions over to the full model remained difficult.
+Ultimately what worked best was to iterate over the reachable border looking
+for a border pixel that would push pogo in the right direction to achieve
+that pixel's desired ballistic trajectory, and then extending the rest length
+of the spring (with a velocity limit) to try to push from that pixel:
+
+![controlled w/green waypoints](images/pogo9.gif)
+
+This controller does not always achieve the appropriate exit velocity
+(something a model-predictive controller might fix), nor does it account for
+the displacement between the contact point and center of mass:
+
+![controlled w/green waypoints](images/pogo12.gif)
+
+Despite this the controller does show some limitations of our trajectory
+optimization approach; the trajectories produced have a limited total energy,
+but do not take into account the momentum with which pogo may have when it
+makes contact; the controller can only do so much compensation for this.
+Taking such into account would also allow the trajectories to make more use
+of pogo's speed, perhaps leading to more of the playful acrobatics seen
+in the dummy controller.
 
 ## File Descriptions
 | File Name | Description |

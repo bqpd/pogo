@@ -55,7 +55,7 @@ var pogo = {
 	lasthitpixels: [],
 
 	// Properties
-	l0: 0,
+	l0: 20,
 	l0max: 20,
 	l0min: 0,
 	m: 1,

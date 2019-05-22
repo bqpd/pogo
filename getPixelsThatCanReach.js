@@ -29,7 +29,7 @@ function getPixelsThatCanReach(points, goal, mask, GOOD, cost) {
 
 function canPixelReach(point, goal, mask, GOOD) {
 	// Compute maximum energy allowed in single hop
-	var MAX_ENERGY = pogo.k*pogo.l0max*pogo.l0max
+	var MAX_ENERGY = pogo.k*10*10
 	var MAX_DY = MAX_ENERGY/pogo.m/GRAVITY
 
 	// Parameterize Polynomial y = a*x^2 + b*x + c.
