@@ -10,16 +10,11 @@
  */
 
 function drawFrame(ctx, mask, color, pogo) {
-	if (run) {
-		window.requestAnimationFrame(function(ts) {
-			//if (typeof imgData_debug === 'undefined') {
+		globalID = window.requestAnimationFrame(function(ts) {
 				colorCanvas(ctx, mask, color, pogo);
 				drawPogo(ctx, pogo);
 
-				drawFrame(ctx, mask, color, pogo);
-			// } else {
-			// 	ctx.putImageData(imgData_debug, 0, 0);
-			// }
+				if (run)
+					drawFrame(ctx, mask, color, pogo);
 		});
-	}
 }

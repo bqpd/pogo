@@ -16,7 +16,7 @@ function getPixelsThatCanReach(points, goal, mask, GOOD, cost) {
 	for (let p=0; p<points.length; p++) {						// For each point in given array of points
 		if (points[p].cost > cost) {
 			if (canPixelReach(points[p], goal, mask, GOOD)) {	// If that point can reach the goal in one hop.
-				points[p].cost = cost; 
+				points[p].cost = cost;
 				reachablePixels.push(points[p]);				// Add that point to the returned list.
 			}
 		}
@@ -26,7 +26,7 @@ function getPixelsThatCanReach(points, goal, mask, GOOD, cost) {
 
 function canPixelReach(point, goal, mask, GOOD) {
 	// Compute maximum energy allowed in single hop
-	var MAX_ENERGY = pogo.k*pogo.l0*pogo.l0;
+	var MAX_ENERGY = pogo.k*20*20//pogo.l0*pogo.l0;
 	var MAX_DY = MAX_ENERGY/pogo.m/GRAVITY
 
 	// Parameterize Polynomial y = a*x^2 + b*x + c.
@@ -76,7 +76,7 @@ function canPixelReach(point, goal, mask, GOOD) {
 
 			// Exclusion Criteria: projectile path intersects with wall
 			var wontIntersectWall = true;
-			var lastY = f(x1);													// The y value of the last x 
+			var lastY = f(x1);													// The y value of the last x
 			for (let x=x1; x<=x2; x++) {										// For all x from start point to endpoint
 				var y = f(x);													// Compute corresponding y along ballistic trajectory
 
@@ -102,6 +102,10 @@ function canPixelReach(point, goal, mask, GOOD) {
 
 			// Must both not intersect with a border and remain within the provided energy limit in order to be a valid path
 			if (wontIntersectWall && withinEnergyLimit) {
+				// console.log("g")
+				if (point.toReach[goal.x] === undefined)  point.toReach[goal.x] = {}
+				point.toReach[goal.x][goal.y] = f
+				// console.log("h")
 				return f;
 			}
 		}

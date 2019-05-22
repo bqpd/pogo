@@ -2,6 +2,7 @@ function Point(x,y) {
 	this.x = x;
 	this.y = y;
 	this.canBeReachedFrom = [];
+	this.toReach = {}
 }
 
 Point.prototype.clone = function() {

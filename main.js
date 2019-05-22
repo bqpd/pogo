@@ -10,6 +10,7 @@ const GRAVITY = 98.1;
 run = true // set to false to halt animation
 var imgData_debug;
 chosenroute = []
+globalID = 0
 
 // Convenient Functions
 sqrt = Math.sqrt
@@ -59,7 +60,7 @@ var pogo = {
 	lasthitpixels: [],
 
 	// Properties
-	l0: 20,
+	l0: 0,
 	m: 1,
 	k: 300,
 	c: 0.01,
@@ -81,12 +82,11 @@ var borderPixels = [];
 [mask, borderPixels] = labelGoodRegion(mask, pogo.x, pogo.y, brushRadius, GOOD, BORDER, BAD, borderPixels);
 routeReady = false
 
+start = () => drawFrame(canvas.getContext('2d'), mask, color, pogo)
+stop = () => cancelAnimationFrame(globalID)
+
 // Animate
-window.onload = function() {
-	window.requestAnimationFrame(function(ts) {
-		drawFrame(canvas.getContext('2d'), mask, color, pogo);
-	});
-}
+window.onload = start
 
 // Updates the mask when the mouse is moved when the mouse button is down.
 function mouseMoveCallback(evt) {
