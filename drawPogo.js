@@ -28,6 +28,8 @@ contactpoint = {}
    return [maybeCollisions, Dx, Dy]
  }
 
+ derpcontrol = false
+
  function getForces(pogo, maybeCollisions) {
    oldl = pogo.l
    // NOTE: the leg instantaneously adopts the correct length, creating energy
@@ -56,19 +58,30 @@ contactpoint = {}
      Fy -= pogo.vy*pogo.c_head
    }
 
-   contactpoint = {cost: Infinity}
-   for (let i=0; i<insideHead.length; i++) {
-      border = insideHead[i]
-      if (border.partOfAnOptimalPathTo != undefined) {
-        if (border.cost <= contactpoint.cost) {
-          contactpoint = border
+   if (insideHead.length) {
+     contactpoint = {cost: Infinity}
+     for (let i=0; i<insideHead.length; i++) {
+        border = insideHead[i]
+        if (border.partOfAnOptimalPathTo != undefined) {
+          if (border.cost <= contactpoint.cost) {
+            contactpoint = border
+          }
         }
-      }
-   }
+     }
 
-   if (contactpoint.partOfAnOptimalPathTo != undefined) {
-     Fx = (vx_desired - pogo.vx)/DT
-     Fy = (vy_desired - pogo.vy)/DT - GRAVITY
+     if (contactpoint.partOfAnOptimalPathTo != undefined) {
+       chosenroute = chooseRoute(contactpoint)
+       var nextpoint = chosenroute[1][0]
+       var [vx_desired, vy_desired] = contactpoint.toReach[nextpoint.x][nextpoint.y]
+       console.log(vx_desired, vy_desired)
+       pogo.vx = vx_desired
+       pogo.vy = vy_desired
+       // Fx = (vx_desired - pogo.vx)/DT
+       // Fy = (vy_desired - pogo.vy)/DT - GRAVITY
+       // console.log(Fx, Fy)
+       // run = false
+       derpcontrol = true
+     }
    }
 
    return [Fx, Fy]
@@ -76,8 +89,8 @@ contactpoint = {}
 
 function drawPogo(ctx, pogo) {
   // time-step independent for constant accel (i.e. ballistic)
-  pogo.x += pogo.vx*DT + 0.5*pogo.ax*pow(DT, 2)
-  pogo.y += pogo.vy*DT + 0.5*pogo.ay*pow(DT, 2)
+  pogo.x += pogo.vx*DT// + 0.5*pogo.ax*pow(DT, 2)
+  pogo.y += pogo.vy*DT// + 0.5*pogo.ay*pow(DT, 2)
 
   var [maybeCollisions,
        Dx, Dy] = getPossibleCollisions(pogo, pogo.r + pogo.l0, borderPixels)
@@ -102,10 +115,13 @@ function drawPogo(ctx, pogo) {
   new_ax = Fx/pogo.m
   new_ay = Fy/pogo.m + GRAVITY
   // trapezoidal integration of velocity
-  pogo.vx += (new_ax + pogo.ax)*DT/2
-  pogo.vy += (new_ay + pogo.ay)*DT/2
-  pogo.ax = new_ax
-  pogo.ay = new_ay
+  if (!derpcontrol) {
+    pogo.vx += new_ax*DT//(new_ax + pogo.ax)*DT/2
+    pogo.vy += new_ay*DT//(new_ay + pogo.ay)*DT/2
+    pogo.ax = new_ax
+    pogo.ay = new_ay
+  }
+  derpcontrol = false
 
   v = norm(pogo.vx, pogo.vy)
   v_angle = Math.atan2(pogo.vx, pogo.vy)
@@ -121,25 +137,6 @@ function drawPogo(ctx, pogo) {
     ctx.translate(-pogo.x, -pogo.y);
     ctx.stroke()
     ctx.beginPath();
-    // ctx.strokeStyle = "cyan"
-    // ctx.translate(pogo.x, pogo.y);
-    // ctx.rotate(-pogo.t);
-    // ctx.lineTo(0, 0);
-    // ctx.lineTo(pogo.vt, 0);
-    // ctx.lineTo(pogo.vt, pogo.vl);
-    // ctx.rotate(pogo.t);
-    // ctx.translate(-pogo.x, -pogo.y);
-    // ctx.stroke()
-    // vx_ = pogo.vl*Math.sin(pogo.t) + pogo.vt*Math.sin(Math.PI/2 - pogo.t)
-    // vy_ = pogo.vl*Math.cos(pogo.t) + -pogo.vt*Math.cos(Math.PI/2 - pogo.t)
-    // ctx.beginPath();
-    // ctx.strokeStyle = "black"
-    // ctx.translate(pogo.x, pogo.y);
-    // ctx.lineTo(0, 0);
-    // ctx.lineTo(vx_, 0);
-    // ctx.lineTo(vx_, vy_);
-    // ctx.translate(-pogo.x, -pogo.y);
-    // ctx.stroke()
 
   // RESTART POGO? //
   if (pogo.x < 0 || pogo.x > canvas.width ||
@@ -199,7 +196,6 @@ function drawPogo(ctx, pogo) {
   ctx.fill();
 
   if (routeReady && contactpoint.partOfAnOptimalPathTo != undefined) {
-    chosenroute = chooseRoute(contactpoint)
     drawRoute(chosenroute, pogo, ctx)
   }
 }

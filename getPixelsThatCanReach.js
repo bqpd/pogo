@@ -104,7 +104,10 @@ function canPixelReach(point, goal, mask, GOOD) {
 			if (wontIntersectWall && withinEnergyLimit) {
 				// console.log("g")
 				if (point.toReach[goal.x] === undefined)  point.toReach[goal.x] = {}
-				point.toReach[goal.x][goal.y] = f
+				vx = Math.pow(GRAVITY/2/a, 0.5)
+				if (point.x > goal.x)  vx = -vx
+				vy = vx*b(a) + GRAVITY*point.x/vx
+				point.toReach[goal.x][goal.y] = [vx, vy]
 				// console.log("h")
 				return f;
 			}
