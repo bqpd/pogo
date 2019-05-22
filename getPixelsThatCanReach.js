@@ -11,14 +11,14 @@
  * @param {number}    	cost 	?
  * @returns {Object[]}	Subarray of points that can reach goal.
  */
- 
+
 function getPixelsThatCanReach(points, goal, mask, GOOD, cost) {
 	reachablePixels = [];										// Initialize returned array of points
 	bpIndices = [];
 	for (let p=0; p<points.length; p++) {						// For each point in given array of points
 		if (points[p].cost > cost) {
 			if (canPixelReach(points[p], goal, mask, GOOD)) {	// If that point can reach the goal in one hop.
-				points[p].cost = cost; 
+				points[p].cost = cost;
 				reachablePixels.push(points[p]);				// Add that point to the returned list.
 				bpIndices.push(p);
 			}
@@ -29,7 +29,7 @@ function getPixelsThatCanReach(points, goal, mask, GOOD, cost) {
 
 function canPixelReach(point, goal, mask, GOOD) {
 	// Compute maximum energy allowed in single hop
-	var MAX_ENERGY = pogo.k*pogo.l0*pogo.l0;
+	var MAX_ENERGY = pogo.k*pogo.l0max*pogo.l0max
 	var MAX_DY = MAX_ENERGY/pogo.m/GRAVITY
 
 	// Parameterize Polynomial y = a*x^2 + b*x + c.
@@ -86,7 +86,7 @@ function canPixelReach(point, goal, mask, GOOD) {
 
 			// Exclusion Criteria: projectile path intersects with wall
 			var wontIntersectWall = true;
-			var lastY = f(x1);																// The y value of the last x 
+			var lastY = f(x1);																// The y value of the last x
 			for (let x=x1; x<=x2; x++) {													// For all x from start point to endpoint
 				var y = f(x);																// Compute corresponding y along ballistic trajectory
 
@@ -122,6 +122,11 @@ function canPixelReach(point, goal, mask, GOOD) {
 
 			// Must both not intersect with a border and remain within the provided energy limit in order to be a valid path
 			if (wontIntersectWall && withinEnergyLimit) {
+				if (point.toReach[goal.x] === undefined)  point.toReach[goal.x] = {}
+				vx = Math.pow(GRAVITY/2/a, 0.5)
+				if (point.x > goal.x)  vx = -vx
+				vy = vx*b(a) + GRAVITY*point.x/vx
+				point.toReach[goal.x][goal.y] = [vx, vy]
 				return f;
 			}
 		}
@@ -145,7 +150,7 @@ function canPixelReach(point, goal, mask, GOOD) {
 
 		// START
 			var wontIntersectWall = true;
-			var lastY = f(x1);																// The y value of the last x 
+			var lastY = f(x1);																// The y value of the last x
 			for (let x=x1; x<=x2; x++) {													// For all x from start point to endpoint
 				var y = f(x);																// Compute corresponding y along ballistic trajectory
 
@@ -167,7 +172,7 @@ function canPixelReach(point, goal, mask, GOOD) {
 						if (mask[x][y]!==GOOD) {											// If the point (x,y) is not traversible,
 							if (!(mask[x][y]==BORDER && (manhattan(x,y,point.x,point.y)<7
 							 || manhattan(x,y,goal.x,goal.y)<7))) {									// (the point is allowed to be a border if its one of the waypoints)
-								wontIntersectWall = false;		
+								wontIntersectWall = false;
 								console.log('alert 2')
 								console.log(`${x},${y}`)							// then the trajectory does intersect with a wall
 								break;

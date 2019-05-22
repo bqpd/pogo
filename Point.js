@@ -2,6 +2,9 @@ function Point(x,y) {
 	this.x = x;
 	this.y = y;
 	this.canBeReachedFrom = [];
+	this.toReach = {}
+	this.partOfAnOptimalPathTo = []
+	this.cost = Infinity
 }
 
 Point.prototype.clone = function() {

@@ -51,15 +51,13 @@ var pogo = {
 	vy: 0,
 	ay: 0,
 	l: 0,
-	vl: 0,
-	al: 0,
 	t: 0,
-	vt: 0,
-	at: 0,
 	lasthitpixels: [],
 
 	// Properties
-	l0: 20,
+	l0: 0,
+	l0max: 10,
+	l0min: 0,
 	m: 1,
 	k: 300,
 	c: 0.01,
@@ -104,7 +102,6 @@ canvas.addEventListener('mouseup', function(evt) {
 	canvas.removeEventListener('mousemove', mouseMoveCallback);
 
 	clearRoute(borderPixels)
-	clearRoute([goal])
 	let cost = 0
 	lastReachablePixels = [goal];
 	var unreachedPixels = borderPixels.slice();
@@ -127,7 +124,7 @@ canvas.addEventListener('mouseup', function(evt) {
 	}
 	console.log(new Date().getTime()-startTime)
 	clearRoute(borderPixels)
-	clearRoute([goal])
 	findRoute(goal)
+	console.log(new Date().getTime()-startTime)
 	routeReady = true
 });

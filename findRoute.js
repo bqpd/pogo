@@ -2,7 +2,6 @@ function clearRoute(borderPixels) {
   for (let i=0; i<borderPixels.length; i++) {
     var pixel = borderPixels[i]
     pixel.cost = Infinity
-    pixel.partOfAnOptimalPathTo = []
 	}
 }
 

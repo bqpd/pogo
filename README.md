@@ -2,7 +2,10 @@
 an underactuated game
 
 ![it's pronounced "geoff"](images/readme.gif)
+
 ![](images/pogo7.gif)
+
+![](images/pogo8.gif)
 
 ## Defining the Environment
 Our simulation opens on Pogo, a character on a pogo stick bouncing around a world you create. Click and drag through the screen to define an area through which Pogo can travel. When you release the mouse, that point will be defined as the goal to which Pogo must travel. Once Pogo has this goal, it performs trajectory optimization to determine the optimal path from it's current position to the goal. The path is displayed using green dots between cyan waypoints along the walls. Each waypoint is labelled with the number of remaining hops to the goal.

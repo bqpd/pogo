@@ -33,7 +33,7 @@ contactpoint = {}
    // NOTE: the leg instantaneously adopts the correct length, creating energy
    pogo.l = pogo.l0  // reset length
    collisionAngleSpread = Math.atan(pogo.l0, pogo.r)/12
-   for (var i=0; i<maybeCollisions.length; i++) {
+   for (let i=0; i<maybeCollisions.length; i++) {
      border = maybeCollisions[i]
      if (Math.abs(border.th-pogo.t) < collisionAngleSpread) {
        contactpoint = border
@@ -63,25 +63,60 @@ function drawPogo(ctx, pogo) {
   pogo.x += pogo.vx*DT + 0.5*pogo.ax*pow(DT, 2)
   pogo.y += pogo.vy*DT + 0.5*pogo.ay*pow(DT, 2)
 
+  var [withinReach,
+       _, _] = getPossibleCollisions(pogo, pogo.r + pogo.l0max, borderPixels)
+
   var [maybeCollisions,
-       Dx, Dy] = getPossibleCollisions(pogo, pogo.r + pogo.l0, borderPixels)
+       Dx, Dy] = getPossibleCollisions(pogo, pogo.r + pogo.l0, withinReach)
 
   // CONTROLLER //
-  if (maybeCollisions.length) {
-    if (pogo.t < -Math.PI)  pogo.t += 2*Math.PI
-    if (pogo.t > Math.PI)   pogo.t -= 2*Math.PI
-    delta_t = Math.atan2(-Dx, -Dy) - pogo.t
-    if (delta_t < -Math.PI)  delta_t += 2*Math.PI
-    if (delta_t > Math.PI)   delta_t -= 2*Math.PI
-    // delta_t = Math.max(Math.min(delta_t, 1), -1) // velocity limit
-    // NOTE: if velocity limit above imposed, system gains energy by rotating
-    //       spring through the ground :(
-    pogo.t += delta_t
-  } else {  // align with ballistic trajectory
-    pogo.t -= 0.1*(pogo.t - Math.atan2(pogo.vx, pogo.vy))
+  var foundpush = false
+  if (withinReach.length) {
+    for (let i=0; i<withinReach.length; i++) {
+      border = withinReach[i]
+      if (border.partOfAnOptimalPathTo.length) {
+        var nextpoint = border.partOfAnOptimalPathTo[0]
+        if (border.toReach[nextpoint.x] != undefined) {
+          var [vx_d, vy_d] = border.toReach[nextpoint.x][nextpoint.y]
+          if (Math.abs(Math.atan2(Fx_desired-Fx, Fy_desired-Fy) - pogo.t <= Math.PI/12)) {
+            deltaF = Math.min(norm(Fx_desired-Fx, Fy_desired-Fy), 5)
+            Fx += deltaF*Math.sin(Math.PI+pogo.t)
+            Fy += deltaF*Math.cos(Math.PI+pogo.t)
+          }
+          angledelta = Math.PI + th_desired - border.th
+          if (angledelta < -Math.PI)  angledelta += 2*Math.PI
+          if (angledelta > Math.PI)   angledelta -= 2*Math.PI
+          if (Math.abs(angledelta) <= Math.PI/12) {
+            pogo.t = border.th
+            pogo.l0 = Math.min(dist(pogo, border), pogo.l0max)
+            foundpush = true
+            break
+          }
+        }
+      }
+    }
+  }
+
+  if (!foundpush) {
+    if (maybeCollisions.length) {
+        pogo.l0 = pogo.l0min
+        if (pogo.t < -Math.PI)  pogo.t += 2*Math.PI
+        if (pogo.t > Math.PI)   pogo.t -= 2*Math.PI
+        delta_t = Math.atan2(-Dx, -Dy) - pogo.t
+        if (delta_t < -Math.PI)  delta_t += 2*Math.PI
+        if (delta_t > Math.PI)   delta_t -= 2*Math.PI
+        // delta_t = Math.max(Math.min(delta_t, 1), -1) // velocity limit
+        // NOTE: if velocity limit above imposed, system gains energy by rotating
+        //       spring through the ground :(
+        pogo.t += delta_t
+    } else {  // align with ballistic trajectory
+      pogo.t -= 0.1*(pogo.t - Math.atan2(pogo.vx, pogo.vy))
+      pogo.l0 -= 0.1*(pogo.l0 - pogo.l0min)
+    }
   }
 
   var [Fx, Fy] = getForces(pogo, maybeCollisions)
+
   new_ax = Fx/pogo.m
   new_ay = Fy/pogo.m + GRAVITY
   // trapezoidal integration of velocity
@@ -90,11 +125,23 @@ function drawPogo(ctx, pogo) {
   pogo.ax = new_ax
   pogo.ay = new_ay
 
+    ctx.beginPath();
+    ctx.strokeStyle = "red"
+    ctx.translate(pogo.x, pogo.y);
+    ctx.lineTo(0, 0);
+    ctx.lineTo(pogo.vx, 0);
+    ctx.lineTo(0, 0);
+    ctx.lineTo(0, pogo.vy);
+    ctx.translate(-pogo.x, -pogo.y);
+    ctx.stroke()
+    ctx.beginPath();
+
   // RESTART POGO? //
   if (pogo.x < 0 || pogo.x > canvas.width ||
       pogo.y < 0 || pogo.y > canvas.height) {
     pogo.vx = pogo.vy = 0;
     [pogo.x, pogo.y] = [pogo.restart_x, pogo.restart_y];
+    contactpoint = {}
   }
 
   // DRAW POGO //
