@@ -29,14 +29,12 @@ contactpoint = {}
  }
 
  function getForces(pogo, maybeCollisions) {
-   oldl = pogo.l
    // NOTE: the leg instantaneously adopts the correct length, creating energy
    pogo.l = pogo.l0  // reset length
    collisionAngleSpread = Math.atan(pogo.l0, pogo.r)/12
    for (let i=0; i<maybeCollisions.length; i++) {
      border = maybeCollisions[i]
      if (Math.abs(border.th-pogo.t) < collisionAngleSpread) {
-       contactpoint = border
        pogo.l = Math.max(0, Math.min(pogo.l, dist(pogo, border) - pogo.r));
      }
    }
@@ -59,7 +57,7 @@ contactpoint = {}
  }
 
 function drawPogo(ctx, pogo) {
-  // time-step independent for constant accel (i.e. ballistic)
+  // time-step independent for constantcontactpoint = border accel (i.e. ballistic)
   pogo.x += pogo.vx*DT + 0.5*pogo.ax*pow(DT, 2)
   pogo.y += pogo.vy*DT + 0.5*pogo.ay*pow(DT, 2)
 
@@ -67,30 +65,37 @@ function drawPogo(ctx, pogo) {
        _, _] = getPossibleCollisions(pogo, pogo.r + pogo.l0max, borderPixels)
 
   var [maybeCollisions,
-       Dx, Dy] = getPossibleCollisions(pogo, pogo.r + pogo.l0, withinReach)
+       Dx, Dy] = getPossibleCollisions(pogo, pogo.r + pogo.l0min, withinReach)
 
   // CONTROLLER //
   var foundpush = false
-  if (withinReach.length) {
+  var minangledist = Math.PI/24
+  if (withinReach.length && !maybeCollisions.length) {
     for (let i=0; i<withinReach.length; i++) {
       border = withinReach[i]
       if (border.partOfAnOptimalPathTo.length) {
         var nextpoint = border.partOfAnOptimalPathTo[0]
         if (border.toReach[nextpoint.x] != undefined) {
           var [vx_d, vy_d] = border.toReach[nextpoint.x][nextpoint.y]
-          if (Math.abs(Math.atan2(Fx_desired-Fx, Fy_desired-Fy) - pogo.t <= Math.PI/12)) {
-            deltaF = Math.min(norm(Fx_desired-Fx, Fy_desired-Fy), 5)
-            Fx += deltaF*Math.sin(Math.PI+pogo.t)
-            Fy += deltaF*Math.cos(Math.PI+pogo.t)
-          }
-          angledelta = Math.PI + th_desired - border.th
+          var Fx_d = (vx_d - pogo.vx)/DT
+          var Fy_d = (vy_d - pogo.vy)/DT - GRAVITY
+          var th_d = Math.atan2(Fx_d, Fy_d)
+          angledelta = Math.PI + th_d - border.th
           if (angledelta < -Math.PI)  angledelta += 2*Math.PI
           if (angledelta > Math.PI)   angledelta -= 2*Math.PI
-          if (Math.abs(angledelta) <= Math.PI/12) {
-            pogo.t = border.th
-            pogo.l0 = Math.min(dist(pogo, border), pogo.l0max)
+          if (Math.abs(angledelta) <= minangledist && border.cost <= contactpoint.cost) {
             foundpush = true
-            break
+            contactpoint = border
+            pogo.t = border.th
+            // var l0delta = Math.min(dist(pogo, border), pogo.l0max) - pogo.l0
+            // pogo.l0 += Math.max(-1, Math.min(l0delta, 1))
+            pogo.l = dist(pogo, border)
+            pogo.l0 = Math.abs(Fx_d/(pogo.k*Math.sin(Math.PI+pogo.t))
+                               + Fy_d/(pogo.k*Math.cos(Math.PI+pogo.t)))/2
+            pogo.l0 += pogo.l
+            pogo.l0 = Math.min(pogo.l0max, Math.max(pogo.l0min, pogo.l0))
+            Fx = (pogo.l0-pogo.l)*pogo.k*Math.sin(Math.PI+pogo.t)
+            Fy = (pogo.l0-pogo.l)*pogo.k*Math.cos(Math.PI+pogo.t)
           }
         }
       }
@@ -99,23 +104,33 @@ function drawPogo(ctx, pogo) {
 
   if (!foundpush) {
     if (maybeCollisions.length) {
+        pogo.t = Math.atan2(-Dx, -Dy)
         pogo.l0 = pogo.l0min
-        if (pogo.t < -Math.PI)  pogo.t += 2*Math.PI
-        if (pogo.t > Math.PI)   pogo.t -= 2*Math.PI
-        delta_t = Math.atan2(-Dx, -Dy) - pogo.t
-        if (delta_t < -Math.PI)  delta_t += 2*Math.PI
-        if (delta_t > Math.PI)   delta_t -= 2*Math.PI
-        // delta_t = Math.max(Math.min(delta_t, 1), -1) // velocity limit
-        // NOTE: if velocity limit above imposed, system gains energy by rotating
-        //       spring through the ground :(
-        pogo.t += delta_t
+        contactpoint = {cost: Infinity}
+        var [Fx, Fy] = getForces(pogo, withinReach)
     } else {  // align with ballistic trajectory
       pogo.t -= 0.1*(pogo.t - Math.atan2(pogo.vx, pogo.vy))
       pogo.l0 -= 0.1*(pogo.l0 - pogo.l0min)
+      var [Fx, Fy] = [0, 0]
     }
+  } else {
+    var nextpoint = contactpoint.partOfAnOptimalPathTo[0]
+    var [vx_d, vy_d] = contactpoint.toReach[nextpoint.x][nextpoint.y]
+    ctx.beginPath();
+    ctx.strokeStyle = "cyan"
+    ctx.translate(pogo.x, pogo.y);
+    ctx.lineTo(0, 0);
+    ctx.lineTo(vx_d, vy_d);
+    ctx.translate(-pogo.x, -pogo.y);
+    ctx.stroke()
+    ctx.beginPath();
+    ctx.strokeStyle = "red"
+    ctx.translate(pogo.x, pogo.y);
+    ctx.lineTo(0, 0);
+    ctx.lineTo(pogo.x-contactpoint.x, pogo.y-contactpoint.y);
+    ctx.translate(-pogo.x, -pogo.y);
+    ctx.stroke()
   }
-
-  var [Fx, Fy] = getForces(pogo, maybeCollisions)
 
   new_ax = Fx/pogo.m
   new_ay = Fy/pogo.m + GRAVITY
@@ -125,16 +140,9 @@ function drawPogo(ctx, pogo) {
   pogo.ax = new_ax
   pogo.ay = new_ay
 
-    ctx.beginPath();
-    ctx.strokeStyle = "red"
-    ctx.translate(pogo.x, pogo.y);
-    ctx.lineTo(0, 0);
-    ctx.lineTo(pogo.vx, 0);
-    ctx.lineTo(0, 0);
-    ctx.lineTo(0, pogo.vy);
-    ctx.translate(-pogo.x, -pogo.y);
-    ctx.stroke()
-    ctx.beginPath();
+  if (dist(pogo, goal) <= 2*pogo.r) {
+    contactpoint = {cost: Infinity}
+  }
 
   // RESTART POGO? //
   if (pogo.x < 0 || pogo.x > canvas.width ||
@@ -142,6 +150,11 @@ function drawPogo(ctx, pogo) {
     pogo.vx = pogo.vy = 0;
     [pogo.x, pogo.y] = [pogo.restart_x, pogo.restart_y];
     contactpoint = {}
+  }
+
+  if (routeReady && contactpoint.partOfAnOptimalPathTo != undefined) {
+    chosenroute = chooseRoute(contactpoint)
+    drawRoute(chosenroute, pogo, ctx)
   }
 
   // DRAW POGO //
@@ -191,9 +204,4 @@ function drawPogo(ctx, pogo) {
               -Math.atan2(pogo.ax, pogo.ay),
               0, 2*Math.PI);
   ctx.fill();
-
-  if (routeReady && contactpoint.partOfAnOptimalPathTo != undefined) {
-    chosenroute = chooseRoute(contactpoint)
-    drawRoute(chosenroute, pogo, ctx)
-  }
 }

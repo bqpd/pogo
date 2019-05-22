@@ -56,7 +56,7 @@ var pogo = {
 
 	// Properties
 	l0: 0,
-	l0max: 10,
+	l0max: 20,
 	l0min: 0,
 	m: 1,
 	k: 300,
@@ -122,9 +122,7 @@ canvas.addEventListener('mouseup', function(evt) {
 		}
 		lastReachablePixels = new_reachable_pixels
 	}
-	console.log(new Date().getTime()-startTime)
 	clearRoute(borderPixels)
 	findRoute(goal)
-	console.log(new Date().getTime()-startTime)
 	routeReady = true
 });
